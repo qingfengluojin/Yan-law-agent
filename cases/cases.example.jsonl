@@ -1,0 +1,3 @@
+{"id":"fixture-single-01","question":"测试劳动法第1条是什么？","type":"single_hop","gold_article_ids":["测试劳动法#1"],"expected_behavior":"命中第1条并通过引用核验","notes":"合成测试案例，非真实法条"}
+{"id":"fixture-multi-01","question":"用人单位未缴社保，解除劳动合同需要哪些条文？","type":"multi_hop","gold_article_ids":["测试劳动法#1","测试劳动法#2"],"expected_behavior":"检索并获取相关条文，引用通过核验","notes":"合成测试案例，非真实法条"}
+{"id":"fixture-no-answer-01","question":"公司未提供免费午餐，能否解除劳动合同？","type":"no_answer","gold_article_ids":[],"expected_behavior":"没有可核验依据时拒答或降级","notes":"合成测试案例，非真实法条"}

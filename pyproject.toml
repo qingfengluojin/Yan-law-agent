@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lawagent"
+version = "0.1.0"
+description = "A small, auditable Chinese labor-law retrieval and citation-verification agent."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "law-agent contributors" }]
+dependencies = [
+  "pydantic>=2.8",
+]
+
+[project.optional-dependencies]
+llm = ["openai>=1.40"]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+]
+
+[project.scripts]
+lawagent = "lawagent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
