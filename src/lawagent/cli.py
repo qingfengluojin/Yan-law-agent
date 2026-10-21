@@ -40,7 +40,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-mode",
         choices=["extractive", "advisory"],
         default="extractive",
-        help="extractive 只输出已核验原文；advisory 允许模型生成需人工复核的说明",
+        help="extractive 只输出已核验引用片段；advisory 允许模型生成需人工复核的说明",
     )
     parser.add_argument("--json", action="store_true", dest="as_json", help="输出完整 JSON")
     parser.add_argument("--trace-out", help="将轨迹写入 JSONL 文件")
@@ -160,7 +160,7 @@ def render_result(result: RunResult) -> str:
     else:
         lines.append("（无）")
 
-    lines.extend(["", "【人工复核】", "需要" if result.answer.review_required else "不需要"])
+    lines.extend(["", "【模型结论复核】", "需要" if result.answer.review_required else "不需要"])
 
     lines.extend(["", "【免责声明】", result.answer.disclaimer])
     return "\n".join(lines)

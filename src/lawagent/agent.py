@@ -268,7 +268,8 @@ class AgentRunner:
         status = "ok" if not failures else "degraded"
         if self.config.answer_mode == "extractive":
             summary = (
-                f"已核验 {len(verified)} 条法条原文。本工具默认只展示原文，不输出法律适用结论。"
+                f"已核验 {len(verified)} 条法条引用片段。"
+                "本工具默认只展示引用片段，不输出法律适用结论。"
             )
             review_required = False
         else:
