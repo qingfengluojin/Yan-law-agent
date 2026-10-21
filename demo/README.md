@@ -39,14 +39,13 @@ $env:PYTHONPATH = "src"
 检查测试：
 
 ```powershell
-python -m unittest discover -s tests -q
+uv run pytest -q
 ```
 
 预期：
 
 ```text
-Ran 43 tests
-OK
+54 passed
 ```
 
 检查数据：
@@ -71,7 +70,9 @@ Get-ChildItem reports -File | Select-Object Name,Length
 
 ```text
 mock-report.md
+mock-holdout-report.md
 report.md
+README.md
 ```
 
 检查样例轨迹：
@@ -91,7 +92,7 @@ Mock 模式不需要 API Key，适合先确认程序能跑通。
 ### 命令
 
 ```powershell
-python -m lawagent --agent --provider mock --data data/articles.jsonl "经济补偿按什么标准计算？"
+uv run lawagent --agent --provider mock --data data/articles.jsonl "经济补偿按什么标准计算？"
 ```
 
 ### 预期
@@ -156,7 +157,7 @@ Clear-Host
 ### 命令
 
 ```powershell
-python -m lawagent --agent --provider openai --data data/articles.jsonl --show-trace "经济补偿按什么标准计算？"
+uv run lawagent --agent --provider openai --data data/articles.jsonl --show-trace "经济补偿按什么标准计算？"
 ```
 
 ### 预期结果
@@ -185,7 +186,7 @@ python -m lawagent --agent --provider openai --data data/articles.jsonl --show-t
 ### 命令
 
 ```powershell
-python -m lawagent --agent --provider openai --data data/articles.jsonl --show-trace "公司不交社保，解除劳动合同能要补偿吗？"
+uv run lawagent --agent --provider openai --data data/articles.jsonl --show-trace "公司不交社保，解除劳动合同能要补偿吗？"
 ```
 
 ### 预期结果
@@ -233,7 +234,7 @@ Get-Content traces\samples\deepseek-multi.jsonl -Encoding UTF8
 ### 命令
 
 ```powershell
-python -m lawagent --agent --provider openai --data data/articles.jsonl --show-trace "公司未提供免费午餐，能否解除劳动合同？"
+uv run lawagent --agent --provider openai --data data/articles.jsonl --show-trace "公司未提供免费午餐，能否解除劳动合同？"
 ```
 
 ### 预期结果
@@ -257,7 +258,7 @@ python -m lawagent --agent --provider openai --data data/articles.jsonl --show-t
 ### 命令
 
 ```powershell
-Get-Content reports\report.md -Encoding UTF8 -TotalCount 30
+Get-Content reports\mock-report.md -Encoding UTF8 -TotalCount 30
 ```
 
 ### 讲解结果
@@ -265,23 +266,22 @@ Get-Content reports\report.md -Encoding UTF8 -TotalCount 30
 ```text
 Gold case hit: 17/17
 Gold article recall: 28/28
-Citation existence: 63/63
-Verbatim match: 63/63
-Unsupported citations: 0
+Raw citation existence: 17/17
+Raw unsupported citations: 0
+Post-guard unsupported citations: 0
 No-answer safe: 3/3
 Recovery case hit: 3/3
-Failure then success: 1/3
+Failure then success: 0/3
 ```
 
 解释：
 
 - `17/17`：17 条有 gold 的案例都命中了目标条文；
 - `28/28`：所有 gold 条文都被工具检索覆盖；
-- `63/63`：最终 63 条引用全部存在；
-- `63/63`：最终引用全部是原文连续片段；
-- `0`：没有无依据引用；
-- `3/3`：3 个无答案问题都安全处理；
-- `1/3`：只有 1 条恢复案例实际触发了工具失败，其余是简称、短查询和路由测试。
+- `17/17`：Mock 输出的原始引用都通过存在性核验；
+- `0`：原始引用和最终引用都没有无依据项；
+- `3/3`：3 个无答案问题都安全拒答；
+- `0/3`：Mock 是固定流程演示，不模拟真实模型的失败恢复行为。
 
 ### 重要说明
 
@@ -295,7 +295,7 @@ Failure then success: 1/3
 如果想把结果交给程序处理：
 
 ```powershell
-python -m lawagent --agent --provider openai --data data/articles.jsonl --json "经济补偿按什么标准计算？"
+uv run lawagent --agent --provider openai --data data/articles.jsonl --json "经济补偿按什么标准计算？"
 ```
 
 输出包含：
@@ -313,10 +313,10 @@ python -m lawagent --agent --provider openai --data data/articles.jsonl --json "
 ## 10. 保存轨迹
 
 ```powershell
-python -m lawagent --agent --provider openai --data data/articles.jsonl --trace-out traces/my-demo.jsonl "公司不交社保，解除劳动合同能要补偿吗？"
+uv run lawagent --agent --provider openai --data data/articles.jsonl --trace-out traces/my-demo.jsonl --run-out traces/my-demo-run.json "公司不交社保，解除劳动合同能要补偿吗？"
 ```
 
-每条轨迹记录：
+`--trace-out` 记录工具事件：
 
 - 步骤编号；
 - 决策摘要；
@@ -327,7 +327,7 @@ python -m lawagent --agent --provider openai --data data/articles.jsonl --trace-
 - 检索到的条文 ID；
 - 工具耗时。
 
-不记录完整思维链，只记录可审计的决策摘要。
+`--run-out` 额外记录最终答案、原始引用、最终引用、缺失事实、provider、model、数据 SHA256 和 Git commit。两者都不记录完整思维链。
 
 ---
 
@@ -338,7 +338,7 @@ python -m lawagent --agent --provider openai --data data/articles.jsonl --trace-
 ### 方案 A：使用 Mock
 
 ```powershell
-python -m lawagent --agent --provider mock --data data/articles.jsonl "经济补偿按什么标准计算？"
+uv run lawagent --agent --provider mock --data data/articles.jsonl "经济补偿按什么标准计算？"
 ```
 
 ### 方案 B：展示已保存的真实轨迹
@@ -350,74 +350,12 @@ Get-Content traces\samples\deepseek-multi.jsonl -Encoding UTF8
 ### 方案 C：展示评测报告
 
 ```powershell
-Get-Content reports\report.md -Encoding UTF8 -TotalCount 30
+Get-Content reports\mock-report.md -Encoding UTF8 -TotalCount 30
 ```
 
 ---
 
-## 12. 3 分钟讲解脚本
-
-### 0:00–0:20 项目定位
-
-> 这是一个劳动法条检索与引用核验 Agent。它不提供正式法律意见，只负责找法条、核验引用和展示可审计轨迹。
-
-### 0:20–0:45 架构
-
-> 用户问题先进入 Agent，Agent 可以选择三个工具：搜索法条、获取原文、核验引用。最终输出还要经过代码侧的二次引用核验。
-
-### 0:45–1:25 单跳演示
-
-运行：
-
-```powershell
-python -m lawagent --agent --provider openai --data data/articles.jsonl --show-trace "经济补偿按什么标准计算？"
-```
-
-讲解：
-
-> 它检索到第 47 条和第 27 条，引用全部来自工具结果，并且通过逐字核验。
-
-### 1:25–2:05 多步演示
-
-运行：
-
-```powershell
-python -m lawagent --agent --provider openai --data data/articles.jsonl --show-trace "公司不交社保，解除劳动合同能要补偿吗？"
-```
-
-讲解：
-
-> 这是多步问题。Agent 需要同时找解除依据和经济补偿依据。轨迹里还能看到工具失败后重新选择工具并恢复。
-
-### 2:05–2:35 无答案演示
-
-运行：
-
-```powershell
-python -m lawagent --agent --provider openai --data data/articles.jsonl --show-trace "公司未提供免费午餐，能否解除劳动合同？"
-```
-
-讲解：
-
-> 它没有硬答，而是说明证据不足，并列出还需要核实的事实。
-
-### 2:35–2:50 评测结果
-
-```powershell
-Get-Content reports\report.md -Encoding UTF8 -TotalCount 30
-```
-
-讲解：
-
-> 20 条案例中，17/17 命中目标条文，63/63 引用存在且逐字一致，0 条无依据引用，3/3 无答案问题安全处理。
-
-### 2:50–3:00 局限
-
-> 这是小样本技术演示，不构成法律意见，也不能用 20 条案例推断总体准确率。
-
----
-
-## 13. 项目边界
+## 12. 项目边界
 
 这个项目不做：
 
@@ -431,6 +369,6 @@ Get-Content reports\report.md -Encoding UTF8 -TotalCount 30
 
 ---
 
-## 14. 一句话总结
+## 13. 一句话总结
 
 > 这个项目不是让模型“记住法条”，而是让模型在查法条时不能乱编，每一步都能被检查和复现。

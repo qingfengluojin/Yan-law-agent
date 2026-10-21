@@ -89,7 +89,12 @@ search 失败 → 改写 search → get_article → verify_citation
 - 连续片段检查；
 - `source_url` 回填。
 
-未通过核验的引用会被移除；全部失败时返回 `no_evidence`，不输出法律结论。
+未通过核验的引用会被移除，重复引用会按 `article_id + 规范化 quote` 去重；全部失败时返回 `no_evidence`，不输出法律结论。
+
+最终输出有两种模式：
+
+- `extractive`（默认）：只展示已核验原文和固定说明，不输出模型自由生成的法律结论；
+- `advisory`：允许模型生成辅助说明，但 `review_required=true`，并明确提示未经法律适用性核验。
 
 ## 5. 降级策略
 
@@ -109,10 +114,10 @@ search 失败 → 改写 search → get_article → verify_citation
 
 ## 7. Provider
 
-- `MockProvider`：确定性地执行 `search → get_article → verify_citation → final`，用于测试和离线演示；
+- `MockProvider`：确定性地执行 `search → get_article → verify_citation → final`，并对文档中的无答案演示场景返回安全拒答；
 - `OpenAICompatibleProvider`：通过 OpenAI-compatible Chat Completions 接口输出 JSON 决策。
 
-MockProvider 不是“假装模型已通过评测”，它只验证流程和引用守卫。
+MockProvider 不是“假装模型已通过评测”，它只验证流程和引用守卫。其无答案场景使用固定演示路由，不代表通用 answerability 模型。
 
 ## 8. 数据策略
 
@@ -141,6 +146,11 @@ MVP 只收录：
 
 轨迹记录：
 
+- 工具事件保存在 `--trace-out`；
+- 完整运行结果、原始引用、最终答案和复现元数据保存在 `--run-out`。
+
+工具事件字段：
+
 - `step`
 - `decision_summary`
 - `tool`
@@ -150,12 +160,12 @@ MVP 只收录：
 - `latency_ms`
 - `error_hint`
 
-不记录完整思维链。轨迹的目的是审计工具调用和错误恢复，不是展示推理过程。
+不记录完整思维链。轨迹的目的是审计工具调用、最终答案和错误恢复，不是展示推理过程。运行元数据包含 provider、model、prompt version、数据 SHA256 和 Git commit。
 
 ## 10. 后续工作
 
 1. 按 `data/SOURCES.md` 录入并核验 40 条法条；
-2. 建立 20 条评测案例与 gold article IDs；
-3. 增加 3 条样例轨迹；
-4. 补充 CLI 集成测试与评测报告；
+2. 维护开发集、20 条回归集和 10 条独立 holdout 集；
+3. 区分模型原始引用与 post-guard 引用指标；
+4. 为真实 provider 重新生成带运行元数据的评测报告；
 5. 录制 3 分钟演示视频。

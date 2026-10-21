@@ -8,6 +8,7 @@ dist/
 build/
 *.egg-info/
 .env
+traces/*.json
 traces/*.jsonl
 !traces/samples/
 .idea/
