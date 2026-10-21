@@ -1,0 +1,10 @@
+{"id":"dev-01","question":"公司不交社保，解除劳动合同能要补偿吗？","expected_article_ids":["中华人民共和国劳动合同法#38","中华人民共和国劳动合同法#46"],"note":"未缴社保 + 解除 + 经济补偿"}
+{"id":"dev-02","question":"未缴社保涉及哪些条文？","expected_article_ids":["中华人民共和国社会保险法#58","中华人民共和国社会保险法#60","中华人民共和国社会保险法#63","中华人民共和国社会保险法#86"],"note":"社会保险登记、缴纳、催缴和处罚"}
+{"id":"dev-03","question":"经济补偿按什么标准计算？","expected_article_ids":["中华人民共和国劳动合同法#47","中华人民共和国劳动合同法实施条例#27"],"note":"经济补偿计算标准与月工资口径"}
+{"id":"dev-04","question":"工作年限怎么折算经济补偿？","expected_article_ids":["中华人民共和国劳动合同法#47"],"note":"按工作年限计算经济补偿"}
+{"id":"dev-05","question":"加班工资的支付标准是什么？","expected_article_ids":["中华人民共和国劳动法#44"],"note":"加班工资支付标准"}
+{"id":"dev-06","question":"延长工作时间有什么限制？","expected_article_ids":["中华人民共和国劳动法#41"],"note":"延长工作时间限制"}
+{"id":"dev-07","question":"试用期最长可以约定多久？","expected_article_ids":["中华人民共和国劳动合同法#19"],"note":"试用期期限"}
+{"id":"dev-08","question":"试用期工资最低是多少？","expected_article_ids":["中华人民共和国劳动合同法#20"],"note":"试用期工资"}
+{"id":"dev-09","question":"工伤认定需要哪些材料？","expected_article_ids":["工伤保险条例#18"],"note":"工伤认定申请材料"}
+{"id":"dev-10","question":"哪些情形应当认定为工伤？","expected_article_ids":["工伤保险条例#14"],"note":"应当认定为工伤的情形"}

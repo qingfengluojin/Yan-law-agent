@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from lawagent.retriever import Retriever, load_articles
+from lawagent.retriever import Retriever, extract_article_no, load_articles
 
 FIXTURE = Path(__file__).parent / "fixtures/articles.jsonl"
 
@@ -37,6 +37,14 @@ class RetrieverTests(unittest.TestCase):
             path = Path(directory) / "empty.jsonl"
             path.write_text("", encoding="utf-8")
             self.assertEqual(load_articles(path), [])
+
+    def test_chinese_article_number_route(self) -> None:
+        self.assertEqual(extract_article_no("测试劳动法第三条"), "3")
+        self.assertIsNotNone(self.retriever.get_article("测试劳动法", "第三条"))
+
+        results = self.retriever.search("测试劳动法第三条", top_k=2)
+        self.assertTrue(results)
+        self.assertEqual(results[0].article_id, "测试劳动法#3")
 
 
 if __name__ == "__main__":

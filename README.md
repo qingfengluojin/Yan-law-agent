@@ -84,11 +84,12 @@ python -m lawagent --agent --provider mock --data data/articles.jsonl --json --t
 ```json
 {
   "law": "中华人民共和国劳动合同法",
+  "law_type": "法律",
   "article_no": "38",
   "text": "官方核验后的完整原文",
   "topic": "劳动合同解除",
   "source_url": "https://flk.npc.gov.cn/...",
-  "verified_at": "2026-10-19",
+  "verified_at": "2026-10-20",
   "status": "current"
 }
 ```
@@ -133,11 +134,15 @@ python -m pip install -e ".[dev]"
 pytest
 ruff check .
 ```
+## 评测
 
+```powershell
+python scripts\evaluate.py --mode both --provider mock --data data/articles.jsonl --cases cases/cases.jsonl --out reports/report.md
+```
 ## 已知局限
 
-- 评测集尚未建立，不能证明总体准确率；
-- 生产法条数据尚未录入；
+- 20 条评测案例已建立，但评测脚本和报告尚未完成；
+- 真实 LLM 轨迹和演示视频尚未完成；
 - baseline 当前是“单次检索 + 原文列表”，不是端到端 LLM 对照；
 - 引用核验只能保证“文本存在且连续”，不能保证“该条文适用于具体案件”；
 - MockProvider 只用于流程演示，不代表真实模型能力。

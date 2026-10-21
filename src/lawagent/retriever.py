@@ -16,6 +16,27 @@ _CJK_SEQ_RE = re.compile(r"[\u4e00-\u9fff]+")
 _WORD_RE = re.compile(r"[a-zA-Z]+|\d+(?:\.\d+)?")
 _ARTICLE_NO_RE = re.compile(r"第\s*(\d+)\s*条")
 _BARE_ARTICLE_NO_RE = re.compile(r"(?<!第)(\d+)\s*条")
+_CN_ARTICLE_NO_RE = re.compile(r"第\s*([零一二两三四五六七八九十百千]+)\s*条")
+
+_CN_DIGITS = {
+    "零": 0,
+    "一": 1,
+    "二": 2,
+    "两": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+}
+
+_CN_UNITS = {
+    "十": 10,
+    "百": 100,
+    "千": 1000,
+}
 
 _STOPWORDS = {
     "的",
@@ -88,7 +109,16 @@ def normalize_law_name(name: str) -> str:
 
 
 def extract_article_no(query: str) -> str | None:
-    match = _ARTICLE_NO_RE.search(query) or _BARE_ARTICLE_NO_RE.search(query)
+    match = _ARTICLE_NO_RE.search(query)
+    if match:
+        return match.group(1)
+
+    match = _CN_ARTICLE_NO_RE.search(query)
+    if match:
+        value = chinese_number_to_int(match.group(1))
+        return str(value) if value is not None else None
+
+    match = _BARE_ARTICLE_NO_RE.search(query)
     return match.group(1) if match else None
 
 
@@ -142,6 +172,27 @@ def tokenize(text: str, *, expand: bool = False) -> list[str]:
     tokens.extend(_WORD_RE.findall(value))
     return tokens
 
+def chinese_number_to_int(text: str) -> int | None:
+    if not text:
+        return None
+
+    total = 0
+    section = 0
+    number = 0
+
+    for char in text:
+        if char in _CN_DIGITS:
+            number = _CN_DIGITS[char]
+        elif char in _CN_UNITS:
+            unit = _CN_UNITS[char]
+            if number == 0:
+                number = 1
+            section += number * unit
+            number = 0
+        else:
+            return None
+
+    return section + number
 
 class BM25Index:
     """A compact BM25 implementation; no compiled dependency is required."""
@@ -259,12 +310,23 @@ class Retriever:
 
 def _normalize_article_no(value: str) -> str:
     text = unicodedata.normalize("NFKC", str(value)).strip()
-    match = _ARTICLE_NO_RE.search(text) or _BARE_ARTICLE_NO_RE.search(text)
+
+    match = _ARTICLE_NO_RE.search(text)
     if match:
         return match.group(1)
+
+    match = _CN_ARTICLE_NO_RE.search(text)
+    if match:
+        number = chinese_number_to_int(match.group(1))
+        if number is not None:
+            return str(number)
+
+    match = _BARE_ARTICLE_NO_RE.search(text)
+    if match:
+        return match.group(1)
+
     digits = re.search(r"(\d+)", text)
     return digits.group(1) if digits else text
-
 
 def load_articles(path: str | Path) -> list[Article]:
     """Load and validate a JSONL corpus. Blank lines are ignored."""

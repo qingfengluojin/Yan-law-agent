@@ -1,0 +1,20 @@
+{"id":"single-01","question":"劳动合同法第38条原文是什么？","type":"single_hop","gold_article_ids":["中华人民共和国劳动合同法#38"],"expected_behavior":"命中第38条并通过引用核验","notes":"条号精确路由"}
+{"id":"single-02","question":"经济补偿按什么标准计算？","type":"single_hop","gold_article_ids":["中华人民共和国劳动合同法#47"],"expected_behavior":"命中第47条并通过引用核验","notes":"经济补偿计算标准"}
+{"id":"single-03","question":"加班工资的支付标准是什么？","type":"single_hop","gold_article_ids":["中华人民共和国劳动法#44"],"expected_behavior":"命中第44条并通过引用核验","notes":"加班工资支付标准"}
+{"id":"single-04","question":"试用期最长可以约定多久？","type":"single_hop","gold_article_ids":["中华人民共和国劳动合同法#19"],"expected_behavior":"命中第19条并通过引用核验","notes":"试用期期限"}
+{"id":"single-05","question":"工伤认定需要哪些材料？","type":"single_hop","gold_article_ids":["工伤保险条例#18"],"expected_behavior":"命中第18条并通过引用核验","notes":"工伤认定申请材料"}
+{"id":"single-06","question":"未缴社保涉及哪些条文？","type":"single_hop","gold_article_ids":["中华人民共和国社会保险法#58","中华人民共和国社会保险法#60","中华人民共和国社会保险法#63","中华人民共和国社会保险法#86"],"expected_behavior":"前5条召回全部 gold 条文","notes":"社保登记、缴纳、催缴与处罚"}
+{"id":"single-07","question":"经济补偿的月工资怎么计算？","type":"single_hop","gold_article_ids":["中华人民共和国劳动合同法实施条例#27"],"expected_behavior":"命中第27条并通过引用核验","notes":"经济补偿月工资口径"}
+{"id":"single-08","question":"违法解除劳动合同的赔偿标准是什么？","type":"single_hop","gold_article_ids":["中华人民共和国劳动合同法#87"],"expected_behavior":"命中第87条并通过引用核验","notes":"违法解除二倍赔偿"}
+{"id":"multi-01","question":"公司不交社保，解除劳动合同能要补偿吗？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#38","中华人民共和国劳动合同法#46"],"expected_behavior":"工具结果同时覆盖第38、46条","notes":"社保解除 + 经济补偿"}
+{"id":"multi-02","question":"公司未缴社保，解除劳动合同后经济补偿怎么计算？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#38","中华人民共和国劳动合同法#46","中华人民共和国劳动合同法#47"],"expected_behavior":"工具结果覆盖第38、46、47条","notes":"解除 + 补偿 + 计算"}
+{"id":"multi-03","question":"公司未及时足额支付劳动报酬，劳动者解除劳动合同能要补偿吗？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#38","中华人民共和国劳动合同法#46","中华人民共和国劳动合同法#85"],"expected_behavior":"工具结果覆盖第38、46、85条","notes":"劳动报酬 + 解除 + 加付赔偿"}
+{"id":"multi-04","question":"试用期被辞退，能否要求赔偿？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#21","中华人民共和国劳动合同法#87"],"expected_behavior":"工具结果覆盖第21、87条","notes":"试用期解除限制 + 违法解除赔偿"}
+{"id":"multi-05","question":"工伤认定后，单位未参加工伤保险怎么办？","type":"multi_hop","gold_article_ids":["工伤保险条例#18","工伤保险条例#62"],"expected_behavior":"工具结果覆盖第18、62条","notes":"工伤认定材料 + 未参保责任"}
+{"id":"multi-06","question":"经济补偿按工作年限计算时，月工资有什么上限？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#47","中华人民共和国劳动合同法实施条例#27"],"expected_behavior":"工具结果覆盖第47、27条","notes":"年限计算 + 月工资口径"}
+{"id":"no-answer-01","question":"公司未提供免费午餐，能否解除劳动合同？","type":"no_answer","gold_article_ids":[],"expected_behavior":"返回 no_evidence 或 degraded，不输出法律结论","notes":"语料无直接依据"}
+{"id":"no-answer-02","question":"同事在办公室说话太吵，能否要求工伤赔偿？","type":"no_answer","gold_article_ids":[],"expected_behavior":"返回 no_evidence 或 degraded","notes":"无直接依据"}
+{"id":"no-answer-03","question":"公司没有组织团建，是否应当支付经济补偿？","type":"no_answer","gold_article_ids":[],"expected_behavior":"返回 no_evidence 或 degraded","notes":"无直接依据"}
+{"id":"recovery-01","question":"不交社保解除合同补偿","type":"recovery","gold_article_ids":["中华人民共和国劳动合同法#38"],"expected_behavior":"同义词扩展后命中第38条","notes":"模糊查询与同义词恢复"}
+{"id":"recovery-02","question":"劳动合同法第三十八条原文","type":"recovery","gold_article_ids":["中华人民共和国劳动合同法#38"],"expected_behavior":"法律简称 + 条号精确路由","notes":"简称与条号路由"}
+{"id":"recovery-03","question":"试用期工资","type":"recovery","gold_article_ids":["中华人民共和国劳动合同法#20"],"expected_behavior":"短查询命中第20条","notes":"简短关键词恢复"}

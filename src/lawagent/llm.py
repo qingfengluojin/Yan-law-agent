@@ -1,6 +1,7 @@
 """LLM providers: a deterministic mock and an OpenAI-compatible client."""
 
 from __future__ import annotations
+from .retriever import extract_article_no
 
 import json
 import re
@@ -65,13 +66,14 @@ class MockProvider:
             if not articles:
                 return _no_evidence("检索结果为空。")
 
-            article = articles[0]
-            requested_no = _extract_article_no(question)
+            requested_no = extract_article_no(question)
             if requested_no is not None:
                 article = next(
                     (item for item in articles if item.article_no == requested_no),
-                    article,
+                    articles[0],
                 )
+            else:
+                article = _select_article(question, articles)
             return AgentDecision(
                 decision_summary=f"检索已定位到第{article.article_no}条，获取完整原文。",
                 tool="get_article",
@@ -84,7 +86,7 @@ class MockProvider:
             article = _article_from_result(last.result.data.get("article"))
             if article is None:
                 return _no_evidence("工具没有返回条文原文。")
-            quote = article.text[:80]
+            quote = article.text
             return AgentDecision(
                 decision_summary=f"取得第{article.article_no}条原文，提交引用核验。",
                 tool="verify_citation",
@@ -109,7 +111,7 @@ class MockProvider:
                     Citation(
                         law=article.law,
                         article_no=article.article_no,
-                        quote=article.text[:80],
+                        quote=article.text,
                     )
                 ],
                 missing_facts=[],
@@ -224,17 +226,73 @@ class OpenAICompatibleProvider:
         return _parse_decision(payload)
 
 
-def _extract_article_no(text: str) -> str | None:
-    match = re.search(r"第\s*(\d+)\s*条", text)
-    return match.group(1) if match else None
-
-
 def _rewrite_query(question: str) -> str:
     compact = re.sub(r"[？?！!。，,；;：:\s]+", "", question)
     compact = compact.replace("怎么", "").replace("如何", "")
     rewritten = compact or "劳动法 条文"
     return f"{rewritten} 劳动法"
 
+def _selection_hints(question: str) -> list[tuple[str, int]]:
+    hints: list[tuple[str, int]] = []
+
+    if any(term in question for term in ("社保", "社会保险")):
+        hints.append(("社会保险费", 6))
+    if "补偿" in question:
+        hints.append(("经济补偿", 4))
+        if "经济补偿" in question:
+            if "月工资" in question:
+                hints.append(("月工资", 4))
+            else:
+                hints.extend([("每满", 4), ("工作年限", 3)])
+    if "解除" in question:
+        hints.append(("解除劳动合同", 2))
+    if "试用期" in question:
+        if "试用期" in question and "工资" in question:
+            hints.append(("试用期的工资", 5))
+        hints.append(("试用期", 6))
+    if "工资" in question:
+        hints.append(("工资", 2))
+    if "最低" in question:
+        hints.append(("最低", 2))
+    if "加班" in question:
+        hints.extend([("延长工作时间", 4), ("工资报酬", 4)])
+    if "延长工作时间" in question:
+        hints.append(("延长工作时间", 6))
+    if "工伤" in question:
+        hints.append(("工伤", 4))
+    if "材料" in question:
+        hints.append(("材料", 4))
+    if "认定" in question:
+        hints.append(("认定", 2))
+    if "情形" in question:
+        hints.append(("情形", 2))
+    if "标准" in question:
+        hints.append(("标准", 3))
+    if "计算" in question:
+        hints.append(("计算", 2))
+    if "支付" in question:
+        hints.append(("支付", 2))
+    if "限制" in question:
+        hints.append(("限制", 2))
+    if "最长" in question:
+        hints.append(("最长", 2))
+    if "约定" in question:
+        hints.append(("约定", 2))
+    if any(term in question for term in ("未参加", "未参保")):
+        hints.append(("未参加", 6))
+
+    return hints
+
+
+def _select_article(question: str, articles: list[Article]) -> Article:
+    hints = _selection_hints(question)
+    if not hints:
+        return articles[0]
+
+    def score(article: Article) -> int:
+        return sum(weight for term, weight in hints if term in article.text)
+
+    return max(articles, key=score)
 
 def _articles_from_result(value: Any) -> list[Article]:
     if not isinstance(value, list):
