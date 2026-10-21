@@ -10,7 +10,7 @@
 {"id":"multi-02","question":"公司未缴社保，解除劳动合同后经济补偿怎么计算？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#38","中华人民共和国劳动合同法#46","中华人民共和国劳动合同法#47"],"expected_behavior":"工具结果覆盖第38、46、47条","notes":"解除 + 补偿 + 计算"}
 {"id":"multi-03","question":"公司未及时足额支付劳动报酬，劳动者解除劳动合同能要补偿吗？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#38","中华人民共和国劳动合同法#46","中华人民共和国劳动合同法#85"],"expected_behavior":"工具结果覆盖第38、46、85条","notes":"劳动报酬 + 解除 + 加付赔偿"}
 {"id":"multi-04","question":"试用期被辞退，能否要求赔偿？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#21","中华人民共和国劳动合同法#87"],"expected_behavior":"工具结果覆盖第21、87条","notes":"试用期解除限制 + 违法解除赔偿"}
-{"id":"multi-05","question":"工伤认定后，单位未参加工伤保险怎么办？","type":"multi_hop","gold_article_ids":["工伤保险条例#18","工伤保险条例#62"],"expected_behavior":"工具结果覆盖第18、62条","notes":"工伤认定材料 + 未参保责任"}
+{"id":"multi-05","question":"工伤认定申请需要哪些材料，单位未参加工伤保险怎么办？","type":"multi_hop","gold_article_ids":["工伤保险条例#18","工伤保险条例#62"],"expected_behavior":"工具结果覆盖第18、62条","notes":"工伤认定材料 + 未参保责任"}
 {"id":"multi-06","question":"经济补偿按工作年限计算时，月工资有什么上限？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#47","中华人民共和国劳动合同法实施条例#27"],"expected_behavior":"工具结果覆盖第47、27条","notes":"年限计算 + 月工资口径"}
 {"id":"no-answer-01","question":"公司未提供免费午餐，能否解除劳动合同？","type":"no_answer","gold_article_ids":[],"expected_behavior":"返回 no_evidence 或 degraded，不输出法律结论","notes":"语料无直接依据"}
 {"id":"no-answer-02","question":"同事在办公室说话太吵，能否要求工伤赔偿？","type":"no_answer","gold_article_ids":[],"expected_behavior":"返回 no_evidence 或 degraded","notes":"无直接依据"}

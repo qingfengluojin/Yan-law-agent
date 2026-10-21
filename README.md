@@ -76,6 +76,47 @@ python -m lawagent --baseline --data data/articles.jsonl "经济补偿按什么�
 ```powershell
 python -m lawagent --agent --provider mock --data data/articles.jsonl --json --trace-out traces/demo.jsonl "公司不交社保，解除劳动合同能要补偿吗？"
 ```
+## 使用 DeepSeek
+
+DeepSeek 通过 OpenAI-compatible 接口接入：
+
+```powershell
+uv pip install -e ".[llm]"
+
+$env:OPENAI_API_KEY = "你的 DeepSeek API Key"
+$env:OPENAI_BASE_URL = "https://api.deepseek.com"
+$env:LAWAGENT_MODEL = "deepseek-chat"
+$env:PYTHONPATH = "src"
+
+python -m lawagent --agent --provider openai --data data/articles.jsonl "经济补偿按什么标准计算？"
+```
+
+## 评测结果
+
+使用 `deepseek-chat` 在 20 条人工案例上运行：
+
+| 指标 | Agent | Baseline |
+|---|---:|---:|
+| Gold case hit | 17/17 | 17/17 |
+| Gold article recall | 28/28 | 28/28 |
+| Citation existence | 63/63 | 160/160 |
+| Verbatim match | 63/63 | 160/160 |
+| Unsupported citations | 0 | 0 |
+| No-answer safe | 3/3 | 0/3 |
+| Recovery case hit | 3/3 | 3/3 |
+| Failure then success | 1/3 | 0/3 |
+
+Gold hit 和 article recall 衡量工具检索覆盖，不等同于最终答案完整性。  
+20 条样本仅用于定性演示和小规模回归，不能外推总体准确率。
+
+## 样例轨迹
+
+`traces/samples/` 包含 3 条主轨迹和 1 条无答案补充轨迹：
+
+- `deepseek-simple.jsonl`：单跳检索 + 引用核验；
+- `deepseek-multi.jsonl`：首次工具失败后重新选择工具并恢复；
+- `deepseek-no-answer.jsonl`：证据不足时谨慎回答并列出缺失事实；
+- `deepseek-no-answer-02.jsonl`：办公室噪音与工伤赔偿的无答案补充轨迹。
 
 ## 数据录入
 
@@ -141,9 +182,10 @@ python scripts\evaluate.py --mode both --provider mock --data data/articles.json
 ```
 ## 已知局限
 
-- 20 条评测案例已建立，但评测脚本和报告尚未完成；
-- 真实 LLM 轨迹和演示视频尚未完成；
-- baseline 当前是“单次检索 + 原文列表”，不是端到端 LLM 对照；
+- 20 条评测案例仅用于定性演示和小规模回归，不能外推总体准确率；
+- Gold hit 是工具检索覆盖指标，不是最终答案完整性指标；
+- baseline 是 retrieval-only，不是端到端 LLM baseline；
+- 真实 LLM 轨迹已生成，但演示视频尚未录制；
 - 引用核验只能保证“文本存在且连续”，不能保证“该条文适用于具体案件”；
 - MockProvider 只用于流程演示，不代表真实模型能力。
 - 数据范围仅包括法律，以及《工伤保险条例》《劳动合同法实施条例》两部核心行政法规；不包含司法解释、地方规定和其他行政法规。
@@ -172,11 +214,26 @@ law-agent/
 ├── cases/
 │   ├── cases.jsonl
 │   └── README.md
-├── traces/samples/
 ├── tests/
 │   ├── fixtures/articles.jsonl
 │   └── test_*.py
+├── scripts/
+│   ├── build_candidate_csv.py
+│   ├── set_verified_at.py
+│   ├── convert_articles.py
+│   ├── retrieval_check.py
+│   └── evaluate.py
+├── reports/
+│   ├── mock-report.md
+│   └── report.md
+├── traces/
+│   └── samples/
+│       ├── deepseek-simple.jsonl
+│       ├── deepseek-multi.jsonl
+│       ├── deepseek-no-answer.jsonl
+│       └── deepseek-no-answer-02.jsonl
 └── demo/
+
 ```
 
 ## 开发顺序

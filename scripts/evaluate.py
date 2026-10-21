@@ -82,6 +82,28 @@ def citation_metrics(
 
     return total, existence, verbatim, unsupported
 
+def no_answer_is_safe(result: RunResult) -> bool:
+    if result.answer.status in {"no_evidence", "degraded"}:
+        return True
+
+    if result.answer.status == "ok" and result.answer.missing_facts:
+        cautious_markers = (
+            "无法",
+            "不能直接",
+            "取决于",
+            "需补充",
+            "建议补充",
+            "难以",
+            "可能",
+            "需要核实",
+            "需核实",
+        )
+        return any(
+            marker in result.answer.summary
+            for marker in cautious_markers
+        )
+
+    return False
 
 def evaluate_mode(
     mode: str,
@@ -106,7 +128,7 @@ def evaluate_mode(
 
         gold_case_hit = expected <= seen_ids if expected else None
         no_answer_safe = (
-            result.answer.status in {"no_evidence", "degraded"}
+            no_answer_is_safe(result)
             if case["type"] == "no_answer"
             else None
         )
@@ -205,6 +227,7 @@ def render_report(
         f"- 案例文件：`{meta['cases']}`",
         f"- 数据快照：{meta['snapshot']}",
         f"- provider：`{meta['provider']}`",
+        f"- 模型：`{meta['model']}`",
         f"- baseline top_k：{meta['top_k']}",
         "",
         "> Gold hit 以工具 observations 的 `top_ids` 为准，衡量检索覆盖，不等同于最终答案完整性。",
@@ -332,6 +355,8 @@ def main() -> None:
             else OpenAICompatibleProvider()
         )
 
+    model_name = getattr(provider, "model", "mock") if provider else "N/A"
+
     agent_rows = (
         evaluate_mode("agent", cases, retriever, provider, args.top_k)
         if args.mode in {"agent", "both"}
@@ -346,6 +371,7 @@ def main() -> None:
     meta = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "data": args.data,
+        "model": model_name,
         "cases": args.cases,
         "snapshot": ", ".join(
             sorted({article.verified_at.isoformat() for article in articles})
