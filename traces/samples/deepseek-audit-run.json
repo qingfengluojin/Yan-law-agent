@@ -4,7 +4,7 @@
   "answer": {
     "status": "ok",
     "answer_mode": "extractive",
-    "summary": "已核验 2 条法条原文。本工具默认只展示原文，不输出法律适用结论。",
+    "summary": "已核验 2 条法条引用片段。本工具默认只展示引用片段，不输出法律适用结论。",
     "citations": [
       {
         "law": "中华人民共和国劳动合同法",
@@ -22,8 +22,8 @@
       }
     ],
     "missing_facts": [
-      "劳动者是否已以未缴社保为由向用人单位提出解除劳动合同",
-      "劳动者的工作年限及解除前十二个月平均工资（用于计算补偿数额）"
+      "经济补偿的具体计算标准（工作年限、月工资）未在本轮条文中核验",
+      "解除时是否以未缴社保为由明确通知用人单位"
     ],
     "review_required": false,
     "disclaimer": "本工具仅提供法条检索与引用核验，不构成法律意见。法条数据以官方来源为准，请在使用前核对最新版本。"
@@ -31,7 +31,7 @@
   "trace": [
     {
       "step": 1,
-      "decision_summary": "先检索未缴社保解除劳动合同及经济补偿的相关条文。",
+      "decision_summary": "先检索未缴社保导致解除劳动合同及经济补偿的相关条文。",
       "tool": "search_statutes",
       "args": {
         "query": "用人单位未依法缴纳社会保险费 劳动者解除劳动合同 经济补偿",
@@ -50,7 +50,7 @@
         "工伤保险条例#62",
         "中华人民共和国劳动合同法#46"
       ],
-      "latency_ms": 0.5677000008290634
+      "latency_ms": 0.4957999917678535
     },
     {
       "step": 2,
@@ -67,18 +67,18 @@
       "top_ids": [
         "中华人民共和国劳动合同法#38"
       ],
-      "latency_ms": 0.23960000544320792
+      "latency_ms": 0.24760000815149397
     },
     {
       "step": 3,
-      "decision_summary": "已核验劳动合同法第38条与第46条，可据此回答未缴社保解除合同的经济补偿问题。",
+      "decision_summary": "已核验劳动合同法第38条与第46条，可确认未缴社保解除可主张经济补偿。",
       "tool": null,
       "args": {},
       "ok": true,
       "reason": null,
       "hint": null,
       "top_ids": [],
-      "latency_ms": 1355.4785000014817
+      "latency_ms": 1554.7530000039842
     }
   ],
   "raw_citations": [
@@ -97,21 +97,21 @@
       "article_id": ""
     }
   ],
-  "model_summary": "可以。用人单位未依法为劳动者缴纳社会保险费的，劳动者有权解除劳动合同；劳动者依据该情形解除劳动合同的，用人单位应当向劳动者支付经济补偿。",
+  "model_summary": "可以。用人单位未依法为劳动者缴纳社会保险费的，劳动者可以解除劳动合同；劳动者依照劳动合同法第三十八条规定解除劳动合同的，用人单位应当向劳动者支付经济补偿。",
   "model_missing_facts": [
-    "劳动者是否已以未缴社保为由向用人单位提出解除劳动合同",
-    "劳动者的工作年限及解除前十二个月平均工资（用于计算补偿数额）"
+    "经济补偿的具体计算标准（工作年限、月工资）未在本轮条文中核验",
+    "解除时是否以未缴社保为由明确通知用人单位"
   ],
   "run_meta": {
     "provider": "openai",
     "model": "deepseek-chat",
     "prompt_version": "lawagent-system-v1",
     "data_path": "C:\\Users\\29824\\Desktop\\Project\\law\\law-agent\\data\\articles.jsonl",
-    "data_sha256": "168e5c8f8d4fd8361b900934ab638c3d8d0f526e9bb67b0d0c56d11126a5785a",
-    "git_commit": "b093cbe82c38c71d3c8af792506b8de84722dff9",
+    "data_sha256": "f77ded1df876a048ab3dd85e9cc3999e33a4424b2bea5756f72eb53f2dedf378",
+    "git_commit": "4f9edd9ab5266f8116bc00062d730de476d06377",
     "git_dirty": false,
-    "started_at": "2026-10-21T10:12:24.686950Z",
-    "finished_at": "2026-10-21T10:12:28.712276Z"
+    "started_at": "2026-10-21T10:51:00.785213Z",
+    "finished_at": "2026-10-21T10:51:05.096801Z"
   },
   "steps": 3,
   "tool_calls": 2
