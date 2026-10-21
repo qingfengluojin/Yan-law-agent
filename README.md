@@ -7,8 +7,8 @@
 ## 当前状态
 
 - 核心功能、40 条法条、20 条回归案例、10 条独立 holdout 案例和演示文档已完成；
-- `data/articles.jsonl` 包含 40 条自检条文，快照日期为 2026-10-20；
-- 当前数据的 `review_status` 均为 `self_checked`，尚未完成独立第二人复核；
+- `data/articles.jsonl` 包含 40 条独立复核条文，快照日期为 2026-10-21；
+- 当前数据的 `review_status` 均为 `independently_verified`，复核人为 `清风`；
 - 法律 34 条，行政法规 6 条，覆盖 5 个主题，每主题 8 条；
 - `tests/fixtures/articles.jsonl` 是合成测试数据，不是正式法条；
 - 默认 provider 为 `mock`，默认输出模式为 `extractive`，无需 API Key 即可复现安全流程。
@@ -109,7 +109,7 @@ uv run lawagent --agent --provider openai --data data/articles.jsonl "经济补�
 
 ## 评测结果
 
-当前真实 DeepSeek 报告：
+复核前真实 DeepSeek 报告（数据日期和复核状态已更新，需在新数据快照上重跑）：
 
 - `reports/report.deepseek-holdout.md`：10 条独立 holdout，Gold case hit `9/9`，Gold article recall `11/11`，No-answer safe `1/1`；
 - `reports/report.deepseek-regression.md`：20 条回归，Gold case hit `17/17`，Gold article recall `28/28`，No-answer safe `3/3`。
@@ -151,9 +151,9 @@ Baseline 是 top-8 检索结果，不是端到端 LLM 回答，因此 citation �
   "text": "官方来源的完整原文",
   "topic": "劳动合同解除",
   "source_url": "https://flk.npc.gov.cn/...",
-  "verified_at": "2026-10-20",
-  "review_status": "self_checked",
-  "reviewer": "",
+  "verified_at": "2026-10-21",
+  "review_status": "independently_verified",
+  "reviewer": "清风",
   "status": "current"
 }
 ```
@@ -217,7 +217,7 @@ uv run python scripts/evaluate.py --mode both --provider openai --data data/arti
 - `advisory` 模式仍是模型生成内容，必须人工复核；
 - raw citation 指标仍不覆盖 JSON 解析阶段就被丢弃的非法 citation 结构；
 - MockProvider 只用于流程演示，其无答案识别是固定演示场景路由，不代表通用 answerability 能力；
-- 数据目前均为作者自检，尚未完成独立第二人复核；
+- 40 条法条已由独立复核人 `清风` 复核，核对范围为文本、条号、来源和现行状态；
 - 数据范围仅包括法律，以及《工伤保险条例》《劳动合同法实施条例》两部核心行政法规；不包含司法解释、地方规定和其他行政法规。
 
 ## 隐私与许可

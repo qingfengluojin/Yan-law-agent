@@ -33,6 +33,12 @@ LAW_TYPES = {"法律", "行政法规"}
 PAGE_MARK = re.compile(r"[－—–-]\s*\d+\s*[－—–-]")
 
 
+def normalize_iso_date(value: str) -> str:
+    """Accept Excel-style separators but persist dates as YYYY-MM-DD."""
+
+    return date.fromisoformat(value.strip().replace("/", "-")).isoformat()
+
+
 def main() -> None:
     with SRC.open("r", encoding="utf-8-sig", newline="") as handle:
         rows = list(csv.DictReader(handle))
@@ -62,9 +68,9 @@ def main() -> None:
             raise SystemExit(f"line {line_number}: invalid law_type: {record['law_type']}")
 
         try:
-            date.fromisoformat(record["verified_at"])
+            record["verified_at"] = normalize_iso_date(record["verified_at"])
         except ValueError as exc:
-            raise SystemExit(f"line {line_number}: verified_at must be YYYY-MM-DD") from exc
+            raise SystemExit(f"line {line_number}: verified_at must be a valid date") from exc
 
         if "……" in record["text"] or "..." in record["text"]:
             raise SystemExit(f"line {line_number}: ellipsis is not allowed in text")

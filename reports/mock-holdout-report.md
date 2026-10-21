@@ -1,11 +1,11 @@
 # 劳动法 Agent 评测报告
 
-- 运行时间：2026-10-21 17:54:51
+- 运行时间：2026-10-21 18:41:00
 - 数据文件：`data/articles.jsonl`
 - 案例文件：`cases/holdout.jsonl`
-- 数据快照：2026-10-20
-- 数据 SHA256：`168e5c8f8d4fd8361b900934ab638c3d8d0f526e9bb67b0d0c56d11126a5785a`
-- Git commit：`c93ff869ababaf7b7004bd84f10f32888a420787`
+- 数据快照：2026-10-21
+- 数据 SHA256：`f77ded1df876a048ab3dd85e9cc3999e33a4424b2bea5756f72eb53f2dedf378`
+- Git commit：`7f860407080a99daaf7d9fb3aa4ef0aa93f21c7f`
 - Git dirty：true
 - provider：`mock`
 - 模型：`mock`

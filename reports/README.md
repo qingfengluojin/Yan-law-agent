@@ -1,6 +1,6 @@
 # 评测报告说明
 
-## 当前真实评测
+## 复核前真实评测（待在新数据快照上重跑）
 
 - `report.deepseek-holdout.md`：使用 `deepseek-chat` 在 10 条独立 holdout 案例上的真实报告。
   - Gold case hit：9/9
@@ -14,7 +14,7 @@
   - Failure then success：1/3
   - Raw/Post-guard unsupported citations：0/0
 
-两份报告对应源码提交 `31bb0b0`。报告中的 `Git dirty=true` 表示生成报告时报告文件本身尚未提交，不代表源码包含未提交改动。
+两份报告原本对应源码提交 `31bb0b0`，但独立复核后数据日期、复核状态和 SHA256 已变化，因此这些结果只用于追溯，必须重新生成后才能作为最终报告。
 
 ## 离线报告
 
