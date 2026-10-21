@@ -1,0 +1,118 @@
+{
+  "question": "公司不交社保，解除劳动合同能要补偿吗？",
+  "mode": "agent",
+  "answer": {
+    "status": "ok",
+    "answer_mode": "extractive",
+    "summary": "已核验 2 条法条原文。本工具默认只展示原文，不输出法律适用结论。",
+    "citations": [
+      {
+        "law": "中华人民共和国劳动合同法",
+        "article_no": "38",
+        "quote": "（三）未依法为劳动者缴纳社会保险费的；",
+        "source_url": "https://flk.npc.gov.cn/detail?id=2c909fdd678bf17901678bf74d7106b3&fileId=&type=&title=%E4%B8%AD%E5%8D%8E%E4%BA%BA%E6%B0%91%E5%85%B1%E5%92%8C%E5%9B%BD%E5%8A%B3%E5%8A%A8%E5%90%88%E5%90%8C%E6%B3%95",
+        "article_id": "中华人民共和国劳动合同法#38"
+      },
+      {
+        "law": "中华人民共和国劳动合同法",
+        "article_no": "46",
+        "quote": "（一）劳动者依照本法第三十八条规定解除劳动合同的；",
+        "source_url": "https://flk.npc.gov.cn/detail?id=2c909fdd678bf17901678bf74d7106b3&fileId=&type=&title=%E4%B8%AD%E5%8D%8E%E4%BA%BA%E6%B0%91%E5%85%B1%E5%92%8C%E5%9B%BD%E5%8A%B3%E5%8A%A8%E5%90%88%E5%90%8C%E6%B3%95",
+        "article_id": "中华人民共和国劳动合同法#46"
+      }
+    ],
+    "missing_facts": [
+      "劳动者是否已以未缴社保为由向用人单位提出解除劳动合同",
+      "劳动者的工作年限及解除前十二个月平均工资（用于计算补偿数额）"
+    ],
+    "review_required": false,
+    "disclaimer": "本工具仅提供法条检索与引用核验，不构成法律意见。法条数据以官方来源为准，请在使用前核对最新版本。"
+  },
+  "trace": [
+    {
+      "step": 1,
+      "decision_summary": "先检索未缴社保解除劳动合同及经济补偿的相关条文。",
+      "tool": "search_statutes",
+      "args": {
+        "query": "用人单位未依法缴纳社会保险费 劳动者解除劳动合同 经济补偿",
+        "top_k": 8
+      },
+      "ok": true,
+      "reason": null,
+      "hint": null,
+      "top_ids": [
+        "中华人民共和国社会保险法#63",
+        "中华人民共和国劳动合同法#38",
+        "中华人民共和国社会保险法#60",
+        "中华人民共和国社会保险法#86",
+        "中华人民共和国劳动合同法#50",
+        "中华人民共和国劳动合同法#85",
+        "工伤保险条例#62",
+        "中华人民共和国劳动合同法#46"
+      ],
+      "latency_ms": 0.5677000008290634
+    },
+    {
+      "step": 2,
+      "decision_summary": "已检索到劳动合同法第38条、第46条，需核验引用片段后作答。",
+      "tool": "verify_citation",
+      "args": {
+        "law": "中华人民共和国劳动合同法",
+        "article_no": "38",
+        "quote": "（三）未依法为劳动者缴纳社会保险费的；"
+      },
+      "ok": true,
+      "reason": null,
+      "hint": null,
+      "top_ids": [
+        "中华人民共和国劳动合同法#38"
+      ],
+      "latency_ms": 0.23960000544320792
+    },
+    {
+      "step": 3,
+      "decision_summary": "已核验劳动合同法第38条与第46条，可据此回答未缴社保解除合同的经济补偿问题。",
+      "tool": null,
+      "args": {},
+      "ok": true,
+      "reason": null,
+      "hint": null,
+      "top_ids": [],
+      "latency_ms": 1355.4785000014817
+    }
+  ],
+  "raw_citations": [
+    {
+      "law": "中华人民共和国劳动合同法",
+      "article_no": "38",
+      "quote": "（三）未依法为劳动者缴纳社会保险费的；",
+      "source_url": "",
+      "article_id": ""
+    },
+    {
+      "law": "中华人民共和国劳动合同法",
+      "article_no": "46",
+      "quote": "（一）劳动者依照本法第三十八条规定解除劳动合同的；",
+      "source_url": "",
+      "article_id": ""
+    }
+  ],
+  "model_summary": "可以。用人单位未依法为劳动者缴纳社会保险费的，劳动者有权解除劳动合同；劳动者依据该情形解除劳动合同的，用人单位应当向劳动者支付经济补偿。",
+  "model_missing_facts": [
+    "劳动者是否已以未缴社保为由向用人单位提出解除劳动合同",
+    "劳动者的工作年限及解除前十二个月平均工资（用于计算补偿数额）"
+  ],
+  "run_meta": {
+    "provider": "openai",
+    "model": "deepseek-chat",
+    "prompt_version": "lawagent-system-v1",
+    "data_path": "C:\\Users\\29824\\Desktop\\Project\\law\\law-agent\\data\\articles.jsonl",
+    "data_sha256": "168e5c8f8d4fd8361b900934ab638c3d8d0f526e9bb67b0d0c56d11126a5785a",
+    "git_commit": "b093cbe82c38c71d3c8af792506b8de84722dff9",
+    "git_dirty": false,
+    "started_at": "2026-10-21T10:12:24.686950Z",
+    "finished_at": "2026-10-21T10:12:28.712276Z"
+  },
+  "steps": 3,
+  "tool_calls": 2
+}
