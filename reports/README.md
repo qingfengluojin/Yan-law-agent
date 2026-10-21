@@ -1,6 +1,6 @@
 # 评测报告说明
 
-## 复核前真实评测（待在新数据快照上重跑）
+## 当前真实评测（基于 2026-10-21 独立复核数据）
 
 - `report.deepseek-holdout.md`：使用 `deepseek-chat` 在 10 条独立 holdout 案例上的真实报告。
   - Gold case hit：9/9
@@ -14,7 +14,7 @@
   - Failure then success：1/3
   - Raw/Post-guard unsupported citations：0/0
 
-两份报告原本对应源码提交 `31bb0b0`，但独立复核后数据日期、复核状态和 SHA256 已变化，因此这些结果只用于追溯，必须重新生成后才能作为最终报告。
+两份报告基于复核后的数据 SHA256 `f77ded1df876a048ab3dd85e9cc3999e33a4424b2bea5756f72eb53f2dedf378` 生成；holdout 报告对应提交 `670e37a`，回归报告对应提交 `e83e840`。
 
 ## 离线报告
 

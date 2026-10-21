@@ -91,6 +91,8 @@ uv run lawagent --agent --provider mock --data data/articles.jsonl --json --trac
 
 `--trace-out` 保存工具事件；`--run-out` 额外保存最终答案、模型原始摘要与缺失事实、原始引用、通过守卫的引用、数据哈希、Git commit、Git dirty 状态、provider、model 和 prompt version。
 
+Windows PowerShell 读取运行记录时请指定 UTF-8：`Get-Content -Raw -Encoding UTF8 traces/demo-run.json | ConvertFrom-Json`。
+
 ## 使用 DeepSeek
 
 DeepSeek 通过 OpenAI-compatible 接口接入：
@@ -109,7 +111,7 @@ uv run lawagent --agent --provider openai --data data/articles.jsonl "经济补�
 
 ## 评测结果
 
-复核前真实 DeepSeek 报告（数据日期和复核状态已更新，需在新数据快照上重跑）：
+当前真实 DeepSeek 报告（基于 2026-10-21 独立复核数据）：
 
 - `reports/report.deepseek-holdout.md`：10 条独立 holdout，Gold case hit `9/9`，Gold article recall `11/11`，No-answer safe `1/1`；
 - `reports/report.deepseek-regression.md`：20 条回归，Gold case hit `17/17`，Gold article recall `28/28`，No-answer safe `3/3`。
