@@ -1,6 +1,6 @@
+import unittest
 from collections import Counter
 from pathlib import Path
-import unittest
 
 from lawagent.retriever import load_articles
 
@@ -35,17 +35,10 @@ class DataTests(unittest.TestCase):
         self.assertEqual(law_types, Counter({"法律": 34, "行政法规": 6}))
 
     def test_provenance_fields(self) -> None:
+        self.assertTrue(all(article.source_url.startswith("http") for article in self.articles))
+        self.assertTrue(all(article.status == "current" for article in self.articles))
         self.assertTrue(
-            all(article.source_url.startswith("http") for article in self.articles)
-        )
-        self.assertTrue(
-            all(article.status == "current" for article in self.articles)
-        )
-        self.assertTrue(
-            all(
-                article.verified_at.isoformat() == "2026-10-20"
-                for article in self.articles
-            )
+            all(article.verified_at.isoformat() == "2026-10-20" for article in self.articles)
         )
 
 

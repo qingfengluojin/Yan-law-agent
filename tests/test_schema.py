@@ -3,6 +3,8 @@ from __future__ import annotations
 import unittest
 from datetime import date
 
+from pydantic import ValidationError
+
 from lawagent.schema import Article, Citation
 
 
@@ -20,7 +22,7 @@ class SchemaTests(unittest.TestCase):
         self.assertEqual(article.article_id, "测试劳动法#3")
 
     def test_article_rejects_unknown_status(self) -> None:
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValidationError):
             Article(
                 law="测试劳动法",
                 article_no="3",
@@ -32,7 +34,7 @@ class SchemaTests(unittest.TestCase):
             )
 
     def test_citation_requires_non_blank_quote(self) -> None:
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValidationError):
             Citation(law="测试劳动法", article_no="1", quote="   ")
 
 

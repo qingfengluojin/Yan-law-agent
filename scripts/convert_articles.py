@@ -44,28 +44,20 @@ def main() -> None:
     for line_number, row in enumerate(rows, start=2):
         missing = [field for field in FIELDS if not (row.get(field) or "").strip()]
         if missing:
-            raise SystemExit(
-                f"line {line_number}: missing fields: {', '.join(missing)}"
-            )
+            raise SystemExit(f"line {line_number}: missing fields: {', '.join(missing)}")
 
         record = {field: row[field].strip() for field in FIELDS}
 
         if record["topic"] not in TOPICS:
-            raise SystemExit(
-                f"line {line_number}: invalid topic: {record['topic']}"
-            )
+            raise SystemExit(f"line {line_number}: invalid topic: {record['topic']}")
 
         if record["law_type"] not in LAW_TYPES:
-            raise SystemExit(
-                f"line {line_number}: invalid law_type: {record['law_type']}"
-            )
+            raise SystemExit(f"line {line_number}: invalid law_type: {record['law_type']}")
 
         try:
             date.fromisoformat(record["verified_at"])
         except ValueError as exc:
-            raise SystemExit(
-                f"line {line_number}: verified_at must be YYYY-MM-DD"
-            ) from exc
+            raise SystemExit(f"line {line_number}: verified_at must be YYYY-MM-DD") from exc
 
         if "……" in record["text"] or "..." in record["text"]:
             raise SystemExit(f"line {line_number}: ellipsis is not allowed in text")
@@ -77,11 +69,7 @@ def main() -> None:
         article_ids.append(article_id)
         records.append(record)
 
-    duplicates = [
-        article_id
-        for article_id, count in Counter(article_ids).items()
-        if count > 1
-    ]
+    duplicates = [article_id for article_id, count in Counter(article_ids).items() if count > 1]
     if duplicates:
         raise SystemExit(f"duplicate article ids: {duplicates}")
 

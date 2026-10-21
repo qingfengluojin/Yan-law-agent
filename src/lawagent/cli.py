@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 
 from .agent import AgentRunner, run_baseline
 from .llm import MockProvider, OpenAICompatibleProvider
@@ -46,7 +45,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     if not args.question or not args.question.strip():
-        parser.error("必须提供 question，例如：lawagent --agent \"经济补偿按什么标准计算？\"")
+        parser.error('必须提供 question，例如：lawagent --agent "经济补偿按什么标准计算？"')
 
     try:
         articles = load_articles(args.data)
@@ -97,11 +96,7 @@ def main(argv: list[str] | None = None) -> int:
 def render_result(result: RunResult) -> str:
     mode_label = "Agent" if result.mode == "agent" else "Baseline"
     if result.mode == "baseline":
-        status_label = (
-            "单次检索结果"
-            if result.answer.status == "ok"
-            else "单次检索无结果"
-        )
+        status_label = "单次检索结果" if result.answer.status == "ok" else "单次检索无结果"
     else:
         status_label = {
             "ok": "通过核验",

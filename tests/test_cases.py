@@ -1,7 +1,7 @@
 import json
+import unittest
 from collections import Counter
 from pathlib import Path
-import unittest
 
 from lawagent.retriever import load_articles
 

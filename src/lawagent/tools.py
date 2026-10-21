@@ -41,7 +41,9 @@ def tool_schemas() -> list[dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "get_article",
-                "description": "根据法律名称和条号获取完整原文。适用于已经定位到具体条文、需要查看全文的场景。",
+                "description": (
+                    "根据法律名称和条号获取完整原文。适用于已经定位到具体条文、需要查看全文的场景。"
+                ),
                 "parameters": {
                     "type": "object",
                     "properties": {

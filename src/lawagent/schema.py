@@ -21,7 +21,7 @@ class Article(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     law: str
-    law_type: Literal["法律","行政法规"] = "法律"
+    law_type: Literal["法律", "行政法规"] = "法律"
     article_no: str
     text: str
     topic: str

@@ -28,23 +28,17 @@ class ToolTests(unittest.TestCase):
         self.assertTrue(result.hint)
 
     def test_search_rejects_invalid_top_k(self) -> None:
-        result = self.tools.execute(
-            "search_statutes", {"query": "经济补偿", "top_k": 99}
-        )
+        result = self.tools.execute("search_statutes", {"query": "经济补偿", "top_k": 99})
         self.assertFalse(result.ok)
         self.assertEqual(result.reason, "invalid_args")
 
     def test_get_article_resolves_short_law_name(self) -> None:
-        result = self.tools.execute(
-            "get_article", {"law": "测试劳动法", "article_no": "2"}
-        )
+        result = self.tools.execute("get_article", {"law": "测试劳动法", "article_no": "2"})
         self.assertTrue(result.ok)
         self.assertEqual(result.top_ids, ["测试劳动法#2"])
 
     def test_get_article_not_found_has_hint(self) -> None:
-        result = self.tools.execute(
-            "get_article", {"law": "测试劳动法", "article_no": "999"}
-        )
+        result = self.tools.execute("get_article", {"law": "测试劳动法", "article_no": "999"})
         self.assertFalse(result.ok)
         self.assertEqual(result.reason, "article_not_found")
         self.assertIn("测试劳动法", result.hint)

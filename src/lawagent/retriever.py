@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import json
 import math
 import re
 import unicodedata
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Sequence
 
 from .schema import Article
 
@@ -172,11 +171,11 @@ def tokenize(text: str, *, expand: bool = False) -> list[str]:
     tokens.extend(_WORD_RE.findall(value))
     return tokens
 
+
 def chinese_number_to_int(text: str) -> int | None:
     if not text:
         return None
 
-    total = 0
     section = 0
     number = 0
 
@@ -194,6 +193,7 @@ def chinese_number_to_int(text: str) -> int | None:
 
     return section + number
 
+
 class BM25Index:
     """A compact BM25 implementation; no compiled dependency is required."""
 
@@ -202,9 +202,7 @@ class BM25Index:
         self.b = b
         self.term_freqs = [Counter(doc) for doc in documents]
         self.doc_lengths = [len(doc) for doc in documents]
-        self.avgdl = (
-            sum(self.doc_lengths) / len(self.doc_lengths) if self.doc_lengths else 0.0
-        )
+        self.avgdl = sum(self.doc_lengths) / len(self.doc_lengths) if self.doc_lengths else 0.0
         document_frequency: Counter[str] = Counter()
         for freqs in self.term_freqs:
             document_frequency.update(freqs.keys())
@@ -246,7 +244,7 @@ class Retriever:
         self.index = BM25Index([tokenize(article.text) for article in self.articles])
 
     @classmethod
-    def from_jsonl(cls, path: str | Path) -> "Retriever":
+    def from_jsonl(cls, path: str | Path) -> Retriever:
         return cls(load_articles(path))
 
     def resolve_law_name(self, name_or_query: str) -> str | None:
@@ -327,6 +325,7 @@ def _normalize_article_no(value: str) -> str:
 
     digits = re.search(r"(\d+)", text)
     return digits.group(1) if digits else text
+
 
 def load_articles(path: str | Path) -> list[Article]:
     """Load and validate a JSONL corpus. Blank lines are ignored."""

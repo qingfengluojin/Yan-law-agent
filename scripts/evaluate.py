@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -82,6 +81,7 @@ def citation_metrics(
 
     return total, existence, verbatim, unsupported
 
+
 def no_answer_is_safe(result: RunResult) -> bool:
     if result.answer.status in {"no_evidence", "degraded"}:
         return True
@@ -98,12 +98,10 @@ def no_answer_is_safe(result: RunResult) -> bool:
             "需要核实",
             "需核实",
         )
-        return any(
-            marker in result.answer.summary
-            for marker in cautious_markers
-        )
+        return any(marker in result.answer.summary for marker in cautious_markers)
 
     return False
+
 
 def evaluate_mode(
     mode: str,
@@ -127,16 +125,8 @@ def evaluate_mode(
         matched = len(expected & seen_ids)
 
         gold_case_hit = expected <= seen_ids if expected else None
-        no_answer_safe = (
-            no_answer_is_safe(result)
-            if case["type"] == "no_answer"
-            else None
-        )
-        recovery_case_hit = (
-            expected <= seen_ids
-            if case["type"] == "recovery"
-            else None
-        )
+        no_answer_safe = no_answer_is_safe(result) if case["type"] == "no_answer" else None
+        recovery_case_hit = expected <= seen_ids if case["type"] == "recovery" else None
 
         total, existence, verbatim, unsupported = citation_metrics(
             result,
@@ -201,9 +191,7 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, int]:
         "no_answer_safe": sum(bool(row["no_answer_safe"]) for row in no_answer_rows),
         "recovery_total": len(recovery_rows),
         "recovery_hit": sum(bool(row["recovery_case_hit"]) for row in recovery_rows),
-        "failure_then_success": sum(
-            row["failure_then_success"] for row in recovery_rows
-        ),
+        "failure_then_success": sum(row["failure_then_success"] for row in recovery_rows),
     }
 
 
@@ -218,6 +206,33 @@ def render_report(
 ) -> str:
     agent = summarize(agent_rows)
     baseline = summarize(baseline_rows) if baseline_rows else None
+
+    def baseline_ratio(key: str, den_key: str) -> str:
+        return ratio(baseline[key], baseline[den_key]) if baseline else "N/A"
+
+    gold_case_hit_agent = ratio(agent["gold_case_hit"], agent["gold_cases"])
+    gold_case_hit_baseline = baseline_ratio("gold_case_hit", "gold_cases")
+
+    gold_recall_agent = ratio(agent["gold_matched"], agent["gold_total"])
+    gold_recall_baseline = baseline_ratio("gold_matched", "gold_total")
+
+    citation_existence_agent = ratio(agent["citation_existence"], agent["citation_count"])
+    citation_existence_baseline = baseline_ratio("citation_existence", "citation_count")
+
+    citation_verbatim_agent = ratio(agent["citation_verbatim"], agent["citation_count"])
+    citation_verbatim_baseline = baseline_ratio("citation_verbatim", "citation_count")
+
+    unsupported_agent = str(agent["unsupported"])
+    unsupported_baseline = str(baseline["unsupported"]) if baseline else "N/A"
+
+    no_answer_agent = ratio(agent["no_answer_safe"], agent["no_answer_total"])
+    no_answer_baseline = baseline_ratio("no_answer_safe", "no_answer_total")
+
+    recovery_agent = ratio(agent["recovery_hit"], agent["recovery_total"])
+    recovery_baseline = baseline_ratio("recovery_hit", "recovery_total")
+
+    failure_agent = ratio(agent["failure_then_success"], agent["recovery_total"])
+    failure_baseline = baseline_ratio("failure_then_success", "recovery_total")
 
     lines = [
         "# 劳动法 Agent 评测报告",
@@ -236,22 +251,14 @@ def render_report(
         "",
         "| 指标 | Agent | Baseline |",
         "|---|---:|---:|",
-        f"| Gold case hit | {ratio(agent['gold_case_hit'], agent['gold_cases'])} | "
-        f"{ratio(baseline['gold_case_hit'], baseline['gold_cases']) if baseline else 'N/A'} |",
-        f"| Gold article recall | {ratio(agent['gold_matched'], agent['gold_total'])} | "
-        f"{ratio(baseline['gold_matched'], baseline['gold_total']) if baseline else 'N/A'} |",
-        f"| Citation existence | {ratio(agent['citation_existence'], agent['citation_count'])} | "
-        f"{ratio(baseline['citation_existence'], baseline['citation_count']) if baseline else 'N/A'} |",
-        f"| Verbatim match | {ratio(agent['citation_verbatim'], agent['citation_count'])} | "
-        f"{ratio(baseline['citation_verbatim'], baseline['citation_count']) if baseline else 'N/A'} |",
-        f"| Unsupported citations | {agent['unsupported']} | "
-        f"{baseline['unsupported'] if baseline else 'N/A'} |",
-        f"| No-answer safe | {ratio(agent['no_answer_safe'], agent['no_answer_total'])} | "
-        f"{ratio(baseline['no_answer_safe'], baseline['no_answer_total']) if baseline else 'N/A'} |",
-        f"| Recovery case hit | {ratio(agent['recovery_hit'], agent['recovery_total'])} | "
-        f"{ratio(baseline['recovery_hit'], baseline['recovery_total']) if baseline else 'N/A'} |",
-        f"| Failure then success | {ratio(agent['failure_then_success'], agent['recovery_total'])} | "
-        f"{ratio(baseline['failure_then_success'], baseline['recovery_total']) if baseline else 'N/A'} |",
+        f"| Gold case hit | {gold_case_hit_agent} | {gold_case_hit_baseline} |",
+        f"| Gold article recall | {gold_recall_agent} | {gold_recall_baseline} |",
+        f"| Citation existence | {citation_existence_agent} | {citation_existence_baseline} |",
+        f"| Verbatim match | {citation_verbatim_agent} | {citation_verbatim_baseline} |",
+        f"| Unsupported citations | {unsupported_agent} | {unsupported_baseline} |",
+        f"| No-answer safe | {no_answer_agent} | {no_answer_baseline} |",
+        f"| Recovery case hit | {recovery_agent} | {recovery_baseline} |",
+        f"| Failure then success | {failure_agent} | {failure_baseline} |",
         "",
         "## Agent 分类结果",
         "",
@@ -280,11 +287,7 @@ def render_report(
     )
 
     for row in agent_rows:
-        gold = (
-            f"{row['gold_matched']}/{row['gold_total']}"
-            if row["gold_total"]
-            else "-"
-        )
+        gold = f"{row['gold_matched']}/{row['gold_total']}" if row["gold_total"] else "-"
         citations = ", ".join(row["citation_ids"]) or "-"
         if row["type"] == "no_answer":
             note = f"safe={row['no_answer_safe']}"
@@ -312,11 +315,7 @@ def render_report(
             ]
         )
         for row in baseline_rows:
-            gold = (
-                f"{row['gold_matched']}/{row['gold_total']}"
-                if row["gold_total"]
-                else "-"
-            )
+            gold = f"{row['gold_matched']}/{row['gold_total']}" if row["gold_total"] else "-"
             citations = ", ".join(row["citation_ids"]) or "-"
             lines.append(
                 f"| {row['id']} | {row['status']} | {gold} | "
@@ -349,11 +348,7 @@ def main() -> None:
 
     provider = None
     if args.mode in {"agent", "both"}:
-        provider = (
-            MockProvider()
-            if args.provider == "mock"
-            else OpenAICompatibleProvider()
-        )
+        provider = MockProvider() if args.provider == "mock" else OpenAICompatibleProvider()
 
     model_name = getattr(provider, "model", "mock") if provider else "N/A"
 
@@ -373,9 +368,7 @@ def main() -> None:
         "data": args.data,
         "model": model_name,
         "cases": args.cases,
-        "snapshot": ", ".join(
-            sorted({article.verified_at.isoformat() for article in articles})
-        ),
+        "snapshot": ", ".join(sorted({article.verified_at.isoformat() for article in articles})),
         "provider": args.provider,
         "top_k": str(args.top_k),
     }
@@ -388,14 +381,8 @@ def main() -> None:
     print(f"wrote {out}")
     if agent_rows:
         summary = summarize(agent_rows)
-        print(
-            f"agent gold_case_hit: "
-            f"{summary['gold_case_hit']}/{summary['gold_cases']}"
-        )
-        print(
-            f"agent gold_article_recall: "
-            f"{summary['gold_matched']}/{summary['gold_total']}"
-        )
+        print(f"agent gold_case_hit: {summary['gold_case_hit']}/{summary['gold_cases']}")
+        print(f"agent gold_article_recall: {summary['gold_matched']}/{summary['gold_total']}")
         print(f"agent unsupported_citations: {summary['unsupported']}")
 
 

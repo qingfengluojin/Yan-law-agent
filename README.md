@@ -52,8 +52,8 @@ data/articles.jsonl
 要求 Python 3.11+。
 
 ```powershell
-# 方式一：安装为可编辑包
-python -m pip install -e .
+# 方式一：使用 uv 同步依赖
+uv sync
 
 # 方式二：不安装，直接指定 src
 $env:PYTHONPATH = "src"
@@ -81,7 +81,7 @@ python -m lawagent --agent --provider mock --data data/articles.jsonl --json --t
 DeepSeek 通过 OpenAI-compatible 接口接入：
 
 ```powershell
-uv pip install -e ".[llm]"
+uv sync --extra llm
 
 $env:OPENAI_API_KEY = "你的 DeepSeek API Key"
 $env:OPENAI_BASE_URL = "https://api.deepseek.com"
@@ -105,6 +105,10 @@ python -m lawagent --agent --provider openai --data data/articles.jsonl "经济�
 | No-answer safe | 3/3 | 0/3 |
 | Recovery case hit | 3/3 | 3/3 |
 | Failure then success | 1/3 | 0/3 |
+
+`Failure then success: 1/3` 表示 3 条恢复案例中只有 1 条实际触发工具失败；其余为简称、短查询和路由测试。
+
+Baseline 是 top-8 检索结果，不是端到端 LLM 回答，因此 citation 指标不能直接与 Agent 比较。
 
 Gold hit 和 article recall 衡量工具检索覆盖，不等同于最终答案完整性。  
 20 条样本仅用于定性演示和小规模回归，不能外推总体准确率。
@@ -171,7 +175,7 @@ python -m unittest discover -s tests -v
 安装开发依赖后也可以使用：
 
 ```powershell
-python -m pip install -e ".[dev]"
+uv sync --extra dev
 pytest
 ruff check .
 ```

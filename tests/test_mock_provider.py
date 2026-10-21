@@ -1,5 +1,5 @@
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 from lawagent.agent import AgentRunner
 from lawagent.llm import MockProvider

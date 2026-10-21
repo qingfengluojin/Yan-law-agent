@@ -1,12 +1,13 @@
 """LLM providers: a deterministic mock and an OpenAI-compatible client."""
 
 from __future__ import annotations
-from .retriever import extract_article_no
 
 import json
 import re
-from typing import Any, Protocol, Sequence
+from collections.abc import Sequence
+from typing import Any, Protocol
 
+from .retriever import extract_article_no
 from .schema import AgentDecision, Article, Citation, ToolObservation, TraceEvent
 
 
@@ -19,8 +20,7 @@ class LLMProvider(Protocol):
         trace: Sequence[TraceEvent],
         observations: Sequence[ToolObservation],
         tool_schemas: list[dict[str, Any]],
-    ) -> AgentDecision:
-        ...
+    ) -> AgentDecision: ...
 
 
 class MockProvider:
@@ -169,9 +169,7 @@ class OpenAICompatibleProvider:
             {
                 "question": question,
                 "trace": [event.model_dump(mode="json") for event in trace],
-                "observations": [
-                    _compact_observation(observation) for observation in observations
-                ],
+                "observations": [_compact_observation(observation) for observation in observations],
                 "response_format": {
                     "tool_call": {
                         "decision_summary": "一句决策摘要",
@@ -231,6 +229,7 @@ def _rewrite_query(question: str) -> str:
     compact = compact.replace("怎么", "").replace("如何", "")
     rewritten = compact or "劳动法 条文"
     return f"{rewritten} 劳动法"
+
 
 def _selection_hints(question: str) -> list[tuple[str, int]]:
     hints: list[tuple[str, int]] = []
@@ -294,6 +293,7 @@ def _select_article(question: str, articles: list[Article]) -> Article:
 
     return max(articles, key=score)
 
+
 def _articles_from_result(value: Any) -> list[Article]:
     if not isinstance(value, list):
         return []
@@ -330,9 +330,7 @@ def _compact_observation(observation: ToolObservation) -> dict[str, Any]:
     compact_data = dict(data.get("data") or {})
 
     if isinstance(compact_data.get("articles"), list):
-        compact_data["articles"] = [
-            _truncate_article(item) for item in compact_data["articles"]
-        ]
+        compact_data["articles"] = [_truncate_article(item) for item in compact_data["articles"]]
     if isinstance(compact_data.get("article"), dict):
         compact_data["article"] = _truncate_article(compact_data["article"])
 

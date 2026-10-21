@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from .llm import LLMProvider
 from .retriever import Retriever
@@ -160,9 +160,7 @@ class AgentRunner:
 
             duplicate_calls.add(call_key)
             tool_calls += 1
-            observations.append(
-                ToolObservation(tool=tool, args=decision.args, result=result)
-            )
+            observations.append(ToolObservation(tool=tool, args=decision.args, result=result))
             seen_article_ids.update(result.top_ids)
             trace.append(
                 TraceEvent(
@@ -299,8 +297,7 @@ class AgentRunner:
             answer = FinalAnswer(
                 status="degraded",
                 summary=(
-                    f"检索未收敛（{reason}）。以下仅列出本轮已获取的条文原文，"
-                    "不构成法律结论。"
+                    f"检索未收敛（{reason}）。以下仅列出本轮已获取的条文原文，不构成法律结论。"
                 ),
                 citations=citations,
             )
