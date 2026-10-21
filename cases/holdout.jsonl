@@ -1,0 +1,10 @@
+{"id":"holdout-01","question":"劳动者提前三十日书面通知用人单位，可以解除劳动合同吗？","type":"single_hop","gold_article_ids":["中华人民共和国劳动合同法#37"],"expected_behavior":"命中第37条","notes":"独立 holdout：预告解除"}
+{"id":"holdout-02","question":"试用期内提前三日通知可以解除劳动合同吗？","type":"single_hop","gold_article_ids":["中华人民共和国劳动合同法#37"],"expected_behavior":"命中第37条","notes":"独立 holdout：试用期预告解除"}
+{"id":"holdout-03","question":"用人单位违法解除劳动合同，劳动者要求继续履行时应当如何处理？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#48","中华人民共和国劳动合同法#87"],"expected_behavior":"命中第48条和第87条","notes":"独立 holdout：继续履行与赔偿"}
+{"id":"holdout-04","question":"经济补偿的支付年限在什么情况下最高不超过十二年？","type":"single_hop","gold_article_ids":["中华人民共和国劳动合同法#47"],"expected_behavior":"命中第47条","notes":"独立 holdout：年限上限"}
+{"id":"holdout-05","question":"经济补偿的月工资是否包括奖金、津贴和补贴？","type":"single_hop","gold_article_ids":["中华人民共和国劳动合同法实施条例#27"],"expected_behavior":"命中实施条例第27条","notes":"独立 holdout：月工资口径"}
+{"id":"holdout-06","question":"用人单位未按时足额缴纳社会保险费，会被加收滞纳金吗？","type":"single_hop","gold_article_ids":["中华人民共和国社会保险法#86"],"expected_behavior":"命中社会保险法第86条","notes":"独立 holdout：欠缴责任"}
+{"id":"holdout-07","question":"法定休假日安排劳动者工作，应支付多少工资报酬？","type":"single_hop","gold_article_ids":["中华人民共和国劳动法#44"],"expected_behavior":"命中劳动法第44条","notes":"独立 holdout：法定休假日工资"}
+{"id":"holdout-08","question":"哪些情形视同工伤？","type":"single_hop","gold_article_ids":["工伤保险条例#15"],"expected_behavior":"命中工伤保险条例第15条","notes":"独立 holdout：视同工伤"}
+{"id":"holdout-09","question":"劳动者因单位未及时足额支付劳动报酬解除合同，可以主张经济补偿吗？","type":"multi_hop","gold_article_ids":["中华人民共和国劳动合同法#38","中华人民共和国劳动合同法#46"],"expected_behavior":"命中第38条和第46条","notes":"独立 holdout：解除与补偿"}
+{"id":"holdout-10","question":"公司取消年度旅游福利，劳动者可以据此要求经济补偿吗？","type":"no_answer","gold_article_ids":[],"expected_behavior":"安全拒答或说明证据不足","notes":"独立 holdout：无直接依据"}
