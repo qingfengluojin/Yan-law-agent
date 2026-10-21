@@ -109,7 +109,12 @@ uv run lawagent --agent --provider openai --data data/articles.jsonl "经济补�
 
 ## 评测结果
 
-`reports/mock-report.md` 是当前代码的 Mock 回归报告，`reports/mock-holdout-report.md` 是未与开发集重叠的 10 条 holdout 报告。报告同时区分：
+当前真实 DeepSeek 报告：
+
+- `reports/report.deepseek-holdout.md`：10 条独立 holdout，Gold case hit `9/9`，Gold article recall `11/11`，No-answer safe `1/1`；
+- `reports/report.deepseek-regression.md`：20 条回归，Gold case hit `17/17`，Gold article recall `28/28`，No-answer safe `3/3`。
+
+`reports/mock-report.md` 是离线 Mock 回归报告，`reports/mock-holdout-report.md` 是离线 holdout 报告。所有报告同时区分：
 
 - 模型原始输出引用；
 - Output Guard 之后的引用；
@@ -117,7 +122,7 @@ uv run lawagent --agent --provider openai --data data/articles.jsonl "经济补�
 - 最终无效引用；
 - 去重后的唯一引用。
 
-`reports/report.md` 是 2026-10-21 的历史 DeepSeek 报告，生成于 raw/post-guard 指标拆分和引用去重之前，保留用于追溯，不应直接当作当前代码的结果。仓库不保存 API Key，因此本次代码更新没有自动重跑真实 DeepSeek 评测。
+`reports/report.md` 是早期 DeepSeek 历史报告，生成于 raw/post-guard 指标拆分和引用去重之前，只保留用于追溯。当前真实结果以上述两份 DeepSeek 报告为准。
 
 Baseline 是 top-8 检索结果，不是端到端 LLM 回答，因此 citation 指标不能直接与 Agent 比较。Gold hit 和 article recall 衡量工具检索覆盖，不等同于最终答案完整性。20 条回归样本和 10 条 holdout 样本都不能外推总体准确率。
 
@@ -258,6 +263,8 @@ law-agent/
 │   ├── retrieval_check.py
 │   └── evaluate.py
 ├── reports/
+│   ├── report.deepseek-holdout.md
+│   ├── report.deepseek-regression.md
 │   ├── mock-report.md
 │   ├── mock-holdout-report.md
 │   ├── report.md

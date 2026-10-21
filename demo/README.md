@@ -69,6 +69,8 @@ Get-ChildItem reports -File | Select-Object Name,Length
 应该能看到：
 
 ```text
+report.deepseek-holdout.md
+report.deepseek-regression.md
 mock-report.md
 mock-holdout-report.md
 report.md
@@ -258,7 +260,7 @@ uv run lawagent --agent --provider openai --data data/articles.jsonl --show-trac
 ### 命令
 
 ```powershell
-Get-Content reports\mock-report.md -Encoding UTF8 -TotalCount 30
+Get-Content reports\report.deepseek-regression.md -Encoding UTF8 -TotalCount 35
 ```
 
 ### 讲解结果
@@ -266,22 +268,24 @@ Get-Content reports\mock-report.md -Encoding UTF8 -TotalCount 30
 ```text
 Gold case hit: 17/17
 Gold article recall: 28/28
-Raw citation existence: 17/17
+Raw citation existence: 61/61
 Raw unsupported citations: 0
 Post-guard unsupported citations: 0
 No-answer safe: 3/3
 Recovery case hit: 3/3
-Failure then success: 0/3
+Failure then success: 1/3
 ```
 
 解释：
 
 - `17/17`：17 条有 gold 的案例都命中了目标条文；
 - `28/28`：所有 gold 条文都被工具检索覆盖；
-- `17/17`：Mock 输出的原始引用都通过存在性核验；
+- `61/61`：真实模型生成的原始引用全部通过存在性和逐字核验；
 - `0`：原始引用和最终引用都没有无依据项；
 - `3/3`：3 个无答案问题都安全拒答；
-- `0/3`：Mock 是固定流程演示，不模拟真实模型的失败恢复行为。
+- `1/3`：只有 1 条恢复案例实际触发了工具失败，其余是简称、短查询和路由测试。
+
+独立 holdout 的真实结果为 `9/9` case hit、`11/11` article recall 和 `1/1` no-answer safe。
 
 ### 重要说明
 
