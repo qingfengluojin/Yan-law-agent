@@ -6,11 +6,18 @@
 
 ## 当前状态
 
-- 项目骨架与核心代码已创建；
+- 核心功能、40 条法条、20 条评测案例、真实 DeepSeek 报告和演示文档已完成；
 - `data/articles.jsonl` 已包含 40 条经核验条文，快照日期为 2026-10-20；
 - 法律 34 条，行政法规 6 条，覆盖 5 个主题，每主题 8 条；
 - `tests/fixtures/articles.jsonl` 是合成测试数据，不是正式法条；
 - 默认 provider 为 `mock`，无需 API Key 即可复现完整流程。
+
+## 3 分钟了解项目
+
+- **解决什么问题**：模型可能编造法条；本项目要求法条来自本地语料，并逐字核验引用。
+- **核心做法**：模型选择 3 个工具，代码负责最终引用守卫和降级。
+- **真实结果**：20 条案例中，17/17 命中目标条文，63/63 引用通过核验，0 条无依据引用。
+- **现场演示**：见 [`demo/README.md`](demo/README.md)；本项目不提供视频。
 
 ## 它做什么
 
@@ -122,6 +129,8 @@ Gold hit 和 article recall 衡量工具检索覆盖，不等同于最终答案�
 - `deepseek-no-answer.jsonl`：证据不足时谨慎回答并列出缺失事实；
 - `deepseek-no-answer-02.jsonl`：办公室噪音与工伤赔偿的无答案补充轨迹。
 
+详细现场演示步骤见 [demo/README.md](demo/README.md)。
+
 ## 数据录入
 
 正式数据文件为 `data/articles.jsonl`，每行一条：
@@ -182,14 +191,15 @@ ruff check .
 ## 评测
 
 ```powershell
-python scripts\evaluate.py --mode both --provider mock --data data/articles.jsonl --cases cases/cases.jsonl --out reports/report.md
+python scripts\evaluate.py --mode both --provider mock --data data/articles.jsonl --cases cases/cases.jsonl --out reports/mock-report.md
+python scripts\evaluate.py --mode both --provider openai --data data/articles.jsonl --cases cases/cases.jsonl --out reports/report.md
 ```
 ## 已知局限
 
 - 20 条评测案例仅用于定性演示和小规模回归，不能外推总体准确率；
 - Gold hit 是工具检索覆盖指标，不是最终答案完整性指标；
 - baseline 是 retrieval-only，不是端到端 LLM baseline；
-- 真实 LLM 轨迹已生成，但演示视频尚未录制；
+- 演示以 CLI 命令、真实样例轨迹和 `demo/README.md` 为主，不提供视频；
 - 引用核验只能保证“文本存在且连续”，不能保证“该条文适用于具体案件”；
 - MockProvider 只用于流程演示，不代表真实模型能力。
 - 数据范围仅包括法律，以及《工伤保险条例》《劳动合同法实施条例》两部核心行政法规；不包含司法解释、地方规定和其他行政法规。
@@ -237,9 +247,10 @@ law-agent/
 │       ├── deepseek-no-answer.jsonl
 │       └── deepseek-no-answer-02.jsonl
 └── demo/
+    └── README.md
 
 ```
 
 ## 开发顺序
 
-D1 数据核验 → D2 检索 → D3 工具 → D4 Agent 循环 → D5 引用核验与降级 → D6 轨迹与 CLI → D7 评测 → D8 测试与 README → D9 演示视频 → D10 整理提交。
+D1 数据核验 → D2 检索 → D3 工具 → D4 Agent 循环 → D5 引用核验与降级 → D6 轨迹与 CLI → D7 评测 → D8 测试与 README → D9 演示文档 → D10 整理提交。
