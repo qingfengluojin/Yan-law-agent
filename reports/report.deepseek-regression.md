@@ -1,12 +1,12 @@
 # 劳动法 Agent 评测报告
 
-- 运行时间：2026-10-21 18:04:23
+- 运行时间：2026-10-21 18:46:15
 - 数据文件：`data/articles.jsonl`
 - 案例文件：`cases/cases.jsonl`
-- 数据快照：2026-10-20
-- 数据 SHA256：`168e5c8f8d4fd8361b900934ab638c3d8d0f526e9bb67b0d0c56d11126a5785a`
-- Git commit：`31bb0b0678edb4fcdf4ac551d7e7f76790ecf3b7`
-- Git dirty：true
+- 数据快照：2026-10-21
+- 数据 SHA256：`f77ded1df876a048ab3dd85e9cc3999e33a4424b2bea5756f72eb53f2dedf378`
+- Git commit：`670e37aaba52fea88e52f8ef744150a1033b63d3`
+- Git dirty：false
 - provider：`openai`
 - 模型：`deepseek-chat`
 - Prompt version：`evaluation-v1`
@@ -21,17 +21,17 @@
 |---|---:|---:|
 | Gold case hit | 17/17 | 17/17 |
 | Gold article recall | 28/28 | 28/28 |
-| Raw citation existence | 61/61 | 160/160 |
-| Raw verbatim match | 61/61 | 160/160 |
+| Raw citation existence | 64/64 | 160/160 |
+| Raw verbatim match | 64/64 | 160/160 |
 | Raw unsupported citations | 0 | 0 |
-| Post-guard citation existence | 61/61 | 160/160 |
-| Post-guard verbatim match | 61/61 | 160/160 |
+| Post-guard citation existence | 64/64 | 160/160 |
+| Post-guard verbatim match | 64/64 | 160/160 |
 | Post-guard unsupported citations | 0 | 0 |
-| Unique final citations | 61 | 160 |
+| Unique final citations | 64 | 160 |
 | Duplicate final citations | 0 | 0 |
 | No-answer safe | 3/3 | 0/3 |
 | Recovery case hit | 3/3 | 3/3 |
-| Failure then success | 1/3 | 0/3 |
+| Failure then success | 2/3 | 0/3 |
 
 ## Agent 分类结果
 
@@ -48,22 +48,22 @@
 |---|---|---|---:|---:|---:|---|---:|---:|---|
 | single-01 | single_hop | ok | 1 | 1/1 | 0 | 中华人民共和国劳动合同法#38 | 1 | 0 | 条号精确路由 |
 | single-02 | single_hop | ok | 2 | 1/1 | 0 | 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法实施条例#27 | 4 | 0 | 经济补偿计算标准 |
-| single-03 | single_hop | ok | 2 | 1/1 | 0 | 中华人民共和国劳动法#44 | 1 | 0 | 加班工资支付标准 |
+| single-03 | single_hop | ok | 2 | 1/1 | 0 | 中华人民共和国劳动法#44, 中华人民共和国劳动法#44, 中华人民共和国劳动法#44 | 3 | 0 | 加班工资支付标准 |
 | single-04 | single_hop | ok | 2 | 1/1 | 0 | 中华人民共和国劳动合同法#19, 中华人民共和国劳动合同法#19, 中华人民共和国劳动合同法#19 | 3 | 0 | 试用期期限 |
-| single-05 | single_hop | ok | 2 | 1/1 | 0 | 工伤保险条例#18, 工伤保险条例#18, 工伤保险条例#18 | 3 | 0 | 工伤认定申请材料 |
+| single-05 | single_hop | ok | 1 | 1/1 | 0 | 工伤保险条例#18 | 1 | 0 | 工伤认定申请材料 |
 | single-06 | single_hop | ok | 1 | 4/4 | 0 | 中华人民共和国社会保险法#58, 中华人民共和国社会保险法#60, 中华人民共和国社会保险法#63, 中华人民共和国社会保险法#84, 中华人民共和国社会保险法#86, 中华人民共和国劳动合同法#38, 工伤保险条例#62 | 7 | 0 | 社保登记、缴纳、催缴与处罚 |
-| single-07 | single_hop | ok | 2 | 1/1 | 0 | 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法实施条例#27 | 2 | 0 | 经济补偿月工资口径 |
+| single-07 | single_hop | ok | 2 | 1/1 | 0 | 中华人民共和国劳动合同法实施条例#27, 中华人民共和国劳动合同法实施条例#27, 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法#47 | 4 | 0 | 经济补偿月工资口径 |
 | single-08 | single_hop | ok | 2 | 1/1 | 0 | 中华人民共和国劳动合同法#87, 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法#48, 中华人民共和国劳动合同法实施条例#27 | 6 | 0 | 违法解除二倍赔偿 |
 | multi-01 | multi_hop | ok | 2 | 2/2 | 0 | 中华人民共和国劳动合同法#38, 中华人民共和国劳动合同法#46 | 2 | 0 | 社保解除 + 经济补偿 |
 | multi-02 | multi_hop | ok | 3 | 3/3 | 0 | 中华人民共和国劳动合同法#38, 中华人民共和国劳动合同法#46, 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法实施条例#27 | 5 | 0 | 解除 + 补偿 + 计算 |
-| multi-03 | multi_hop | ok | 2 | 3/3 | 0 | 中华人民共和国劳动合同法#38, 中华人民共和国劳动合同法#46, 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法#85 | 4 | 0 | 劳动报酬 + 解除 + 加付赔偿 |
+| multi-03 | multi_hop | ok | 2 | 3/3 | 0 | 中华人民共和国劳动合同法#38, 中华人民共和国劳动合同法#46, 中华人民共和国劳动合同法#47 | 3 | 0 | 劳动报酬 + 解除 + 加付赔偿 |
 | multi-04 | multi_hop | degraded | 4 | 2/2 | 0 | 中华人民共和国劳动合同法#83, 中华人民共和国劳动合同法#48, 中华人民共和国劳动合同法#21, 中华人民共和国劳动合同法#37, 中华人民共和国劳动合同法#19 | 5 | 0 | 试用期解除限制 + 违法解除赔偿 |
-| multi-05 | multi_hop | ok | 2 | 2/2 | 0 | 工伤保险条例#18, 工伤保险条例#18, 工伤保险条例#62, 工伤保险条例#62 | 4 | 0 | 工伤认定材料 + 未参保责任 |
+| multi-05 | multi_hop | ok | 3 | 2/2 | 0 | 工伤保险条例#18, 工伤保险条例#18, 工伤保险条例#18, 工伤保险条例#18, 工伤保险条例#18, 工伤保险条例#62, 工伤保险条例#62, 工伤保险条例#62 | 8 | 0 | 工伤认定材料 + 未参保责任 |
 | multi-06 | multi_hop | ok | 2 | 2/2 | 0 | 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法#47 | 2 | 0 | 年限计算 + 月工资口径 |
 | no-answer-01 | no_answer | ok | 2 | - | 0 | 中华人民共和国劳动合同法#38, 中华人民共和国劳动合同法#46 | 2 | 0 | safe=True |
-| no-answer-02 | no_answer | ok | 2 | - | 0 | 工伤保险条例#14, 工伤保险条例#14, 工伤保险条例#14 | 3 | 0 | safe=True |
+| no-answer-02 | no_answer | ok | 2 | - | 0 | 工伤保险条例#14 | 1 | 0 | safe=True |
 | no-answer-03 | no_answer | ok | 2 | - | 0 | 中华人民共和国劳动合同法#46 | 1 | 0 | safe=True |
-| recovery-01 | recovery | ok | 3 | 1/1 | 0 | 中华人民共和国劳动合同法#38, 中华人民共和国劳动合同法#46, 中华人民共和国劳动合同法#47, 中华人民共和国社会保险法#86 | 4 | 0 | recovery=True; failed_then_success=False |
+| recovery-01 | recovery | ok | 3 | 1/1 | 0 | 中华人民共和国劳动合同法#38, 中华人民共和国劳动合同法#46, 中华人民共和国劳动合同法#47, 中华人民共和国劳动合同法#47 | 4 | 0 | recovery=True; failed_then_success=True |
 | recovery-02 | recovery | ok | 1 | 1/1 | 0 | 中华人民共和国劳动合同法#38 | 1 | 0 | recovery=True; failed_then_success=True |
 | recovery-03 | recovery | ok | 2 | 1/1 | 0 | 中华人民共和国劳动合同法#20 | 1 | 0 | recovery=True; failed_then_success=False |
 
