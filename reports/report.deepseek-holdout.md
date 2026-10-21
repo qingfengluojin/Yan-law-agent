@@ -1,12 +1,12 @@
 # 劳动法 Agent 评测报告
 
-- 运行时间：2026-10-21 18:03:01
+- 运行时间：2026-10-21 18:43:01
 - 数据文件：`data/articles.jsonl`
 - 案例文件：`cases/holdout.jsonl`
-- 数据快照：2026-10-20
-- 数据 SHA256：`168e5c8f8d4fd8361b900934ab638c3d8d0f526e9bb67b0d0c56d11126a5785a`
-- Git commit：`31bb0b0678edb4fcdf4ac551d7e7f76790ecf3b7`
-- Git dirty：true
+- 数据快照：2026-10-21
+- 数据 SHA256：`f77ded1df876a048ab3dd85e9cc3999e33a4424b2bea5756f72eb53f2dedf378`
+- Git commit：`a9f792768a51bab15993f963093a375d35a49214`
+- Git dirty：false
 - provider：`openai`
 - 模型：`deepseek-chat`
 - Prompt version：`evaluation-v1`
@@ -45,7 +45,7 @@
 
 | ID | 类型 | 状态 | 工具调用 | Gold | 原始无效 | 最终引用 | 最终唯一数 | 最终无效 | 备注 |
 |---|---|---|---:|---:|---:|---|---:|---:|---|
-| holdout-01 | single_hop | ok | 2 | 1/1 | 0 | 中华人民共和国劳动合同法#37 | 1 | 0 | 独立 holdout：预告解除 |
+| holdout-01 | single_hop | ok | 1 | 1/1 | 0 | 中华人民共和国劳动合同法#37 | 1 | 0 | 独立 holdout：预告解除 |
 | holdout-02 | single_hop | ok | 2 | 1/1 | 0 | 中华人民共和国劳动合同法#37 | 1 | 0 | 独立 holdout：试用期预告解除 |
 | holdout-03 | multi_hop | ok | 2 | 2/2 | 0 | 中华人民共和国劳动合同法#48, 中华人民共和国劳动合同法#48, 中华人民共和国劳动合同法#87 | 3 | 0 | 独立 holdout：继续履行与赔偿 |
 | holdout-04 | single_hop | ok | 2 | 1/1 | 0 | 中华人民共和国劳动合同法#47 | 1 | 0 | 独立 holdout：年限上限 |
