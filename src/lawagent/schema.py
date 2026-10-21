@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -27,6 +27,8 @@ class Article(BaseModel):
     topic: str
     source_url: str
     verified_at: date
+    review_status: Literal["self_checked", "independently_verified"] = "self_checked"
+    reviewer: str = ""
     status: Literal["current"] = "current"
 
     @field_validator("law", "article_no", "text", "topic", "source_url")
@@ -125,15 +127,33 @@ class TraceEvent(BaseModel):
     latency_ms: float = 0.0
 
 
+class RunMeta(BaseModel):
+    """Reproducibility metadata attached to a CLI run."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    provider: str = ""
+    model: str = ""
+    prompt_version: str = ""
+    data_path: str = ""
+    data_sha256: str = ""
+    git_commit: str = ""
+    git_dirty: bool = False
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+
 class FinalAnswer(BaseModel):
     """Final, code-guarded output."""
 
     model_config = ConfigDict(extra="ignore")
 
     status: Literal["ok", "degraded", "no_evidence"] = "ok"
+    answer_mode: Literal["extractive", "advisory"] = "extractive"
     summary: str
     citations: list[Citation] = Field(default_factory=list)
     missing_facts: list[str] = Field(default_factory=list)
+    review_required: bool = False
     disclaimer: str = DISCLAIMER
 
 
@@ -146,5 +166,7 @@ class RunResult(BaseModel):
     mode: Literal["agent", "baseline"]
     answer: FinalAnswer
     trace: list[TraceEvent] = Field(default_factory=list)
+    raw_citations: list[Citation] = Field(default_factory=list)
+    run_meta: RunMeta = Field(default_factory=RunMeta)
     steps: int = 0
     tool_calls: int = 0

@@ -68,6 +68,16 @@ class VerifyTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertEqual(result.reason, "not_from_this_run")
 
+    def test_duplicate_citations_are_deduplicated(self) -> None:
+        citation = Citation(
+            law="测试劳动法",
+            article_no="1",
+            quote="用人单位应当依法为劳动者缴纳社会保险费。",
+        )
+        verified, failures = self.verifier.verify_all([citation, citation])
+        self.assertEqual(len(verified), 1)
+        self.assertEqual(failures, [])
+
 
 if __name__ == "__main__":
     unittest.main()

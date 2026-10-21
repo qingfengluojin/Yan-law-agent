@@ -70,6 +70,42 @@ class UnsupportedCitationProvider:
         )
 
 
+class FailingProvider:
+    name = "failing"
+
+    def next_action(self, question, trace, observations, tool_schemas):
+        raise RuntimeError("provider unavailable")
+
+
+class UnsupportedSummaryProvider:
+    name = "unsupported-summary"
+
+    def __init__(self, article):
+        self.article = article
+        self.calls = 0
+
+    def next_action(self, question, trace, observations, tool_schemas):
+        self.calls += 1
+        if self.calls == 1:
+            return AgentDecision(
+                decision_summary="获取原文",
+                tool="get_article",
+                args={"law": self.article.law, "article_no": self.article.article_no},
+            )
+        return AgentDecision(
+            decision_summary="生成结论",
+            is_final=True,
+            answer_summary="UNSUPPORTED CONCLUSION: pay 1,000,000 CNY.",
+            citations=[
+                Citation(
+                    law=self.article.law,
+                    article_no=self.article.article_no,
+                    quote=self.article.text,
+                )
+            ],
+        )
+
+
 class AgentTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -115,6 +151,32 @@ class AgentTests(unittest.TestCase):
         result = runner.run("不存在的问题")
         self.assertEqual(result.answer.status, "no_evidence")
         self.assertTrue(any(event.reason == "no_progress" for event in result.trace))
+
+    def test_extractive_mode_does_not_pass_through_unsupported_summary(self) -> None:
+        provider = UnsupportedSummaryProvider(self.retriever.articles[0])
+        result = AgentRunner(self.retriever, provider).run("测试结论接地")
+        self.assertEqual(result.answer.status, "ok")
+        self.assertEqual(result.answer.answer_mode, "extractive")
+        self.assertNotIn("UNSUPPORTED CONCLUSION", result.answer.summary)
+        self.assertFalse(result.answer.review_required)
+
+    def test_advisory_mode_marks_model_summary_for_review(self) -> None:
+        provider = UnsupportedSummaryProvider(self.retriever.articles[0])
+        runner = AgentRunner(
+            self.retriever,
+            provider,
+            config=AgentConfig(answer_mode="advisory"),
+        )
+        result = runner.run("测试结论接地")
+        self.assertEqual(result.answer.status, "ok")
+        self.assertEqual(result.answer.answer_mode, "advisory")
+        self.assertIn("UNSUPPORTED CONCLUSION", result.answer.summary)
+        self.assertTrue(result.answer.review_required)
+
+    def test_provider_error_terminates_safely(self) -> None:
+        result = AgentRunner(self.retriever, FailingProvider()).run("测试 provider 错误")
+        self.assertEqual(result.answer.status, "no_evidence")
+        self.assertIn("provider_error", {event.reason for event in result.trace})
 
     def test_max_steps_terminates(self) -> None:
         provider = AlwaysSearchProvider(["经济补偿"])

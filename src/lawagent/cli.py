@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import UTC, datetime
 
-from .agent import AgentRunner, run_baseline
-from .llm import MockProvider, OpenAICompatibleProvider
+from .agent import AgentConfig, AgentRunner, run_baseline
+from .llm import MockProvider, OpenAICompatibleProvider, ProviderError
 from .retriever import Retriever, load_articles
 from .schema import RunResult
-from .trace import render_trace, write_trace_jsonl
+from .trace import build_run_meta, render_trace, write_run_json, write_trace_jsonl
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -35,8 +36,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="法条 JSONL 路径（默认 data/articles.jsonl）",
     )
     parser.add_argument("--top-k", type=int, default=5, help="baseline 返回条数")
+    parser.add_argument(
+        "--output-mode",
+        choices=["extractive", "advisory"],
+        default="extractive",
+        help="extractive 只输出已核验原文；advisory 允许模型生成需人工复核的说明",
+    )
     parser.add_argument("--json", action="store_true", dest="as_json", help="输出完整 JSON")
     parser.add_argument("--trace-out", help="将轨迹写入 JSONL 文件")
+    parser.add_argument("--run-out", help="将完整运行结果和复现元数据写入 JSON 文件")
     parser.add_argument("--show-trace", action="store_true", help="在文本输出末尾显示轨迹")
     return parser
 
@@ -44,6 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    started_at = datetime.now(UTC)
     if not args.question or not args.question.strip():
         parser.error('必须提供 question，例如：lawagent --agent "经济补偿按什么标准计算？"')
 
@@ -62,6 +71,10 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     retriever = Retriever(articles)
+    provider = None
+    provider_name = "retrieval"
+    model_name = "none"
+    prompt_version = "none"
     if args.baseline:
         result = run_baseline(args.question.strip(), retriever, top_k=args.top_k)
     else:
@@ -73,14 +86,31 @@ def main(argv: list[str] | None = None) -> int:
                     model=args.model,
                     base_url=args.base_url,
                 )
-            except RuntimeError as exc:
+            except ProviderError as exc:
                 print(str(exc), file=sys.stderr)
                 return 2
-        runner = AgentRunner(retriever, provider)
+        provider_name = provider.name
+        model_name = getattr(provider, "model", provider.name)
+        prompt_version = getattr(provider, "prompt_version", "")
+        runner = AgentRunner(
+            retriever,
+            provider,
+            config=AgentConfig(answer_mode=args.output_mode),
+        )
         result = runner.run(args.question.strip())
+
+    result.run_meta = build_run_meta(
+        provider=provider_name,
+        model=model_name,
+        prompt_version=prompt_version,
+        data_path=args.data,
+        started_at=started_at,
+    )
 
     if args.trace_out:
         write_trace_jsonl(result.trace, args.trace_out)
+    if args.run_out:
+        write_run_json(result, args.run_out)
 
     if args.as_json:
         print(result.model_dump_json(indent=2))
@@ -107,6 +137,7 @@ def render_result(result: RunResult) -> str:
     lines = [
         f"【模式】{mode_label}",
         f"【状态】{status_label}",
+        f"【输出模式】{result.answer.answer_mode}",
         f"【步数】{result.steps}  工具调用：{result.tool_calls}",
         "",
         "【结论】",
@@ -128,6 +159,8 @@ def render_result(result: RunResult) -> str:
         lines.extend(f"- {item}" for item in result.answer.missing_facts)
     else:
         lines.append("（无）")
+
+    lines.extend(["", "【人工复核】", "需要" if result.answer.review_required else "不需要"])
 
     lines.extend(["", "【免责声明】", result.answer.disclaimer])
     return "\n".join(lines)

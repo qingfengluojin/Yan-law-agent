@@ -11,6 +11,10 @@ from .retriever import extract_article_no
 from .schema import AgentDecision, Article, Citation, ToolObservation, TraceEvent
 
 
+class ProviderError(RuntimeError):
+    """A user-facing model-provider failure."""
+
+
 class LLMProvider(Protocol):
     name: str
 
@@ -31,6 +35,7 @@ class MockProvider:
     """
 
     name = "mock"
+    prompt_version = "mock-provider-v1"
 
     def next_action(
         self,
@@ -39,6 +44,12 @@ class MockProvider:
         observations: Sequence[ToolObservation],
         tool_schemas: list[dict[str, Any]],
     ) -> AgentDecision:
+        if _is_mock_unanswerable(question):
+            return _no_evidence(
+                "Mock 演示场景：现有语料无法直接支持该问题，已安全拒答。",
+                missing_facts=["需要结合具体事实和其他法律依据进一步判断。"],
+            )
+
         if not observations:
             return AgentDecision(
                 decision_summary="先检索与问题相关的法条。",
@@ -124,6 +135,7 @@ class OpenAICompatibleProvider:
     """Thin wrapper around an OpenAI-compatible chat completions endpoint."""
 
     name = "openai"
+    prompt_version = "lawagent-system-v1"
 
     def __init__(
         self,
@@ -135,18 +147,28 @@ class OpenAICompatibleProvider:
         try:
             from openai import OpenAI
         except ImportError as exc:
-            raise RuntimeError(
-                "未安装 openai 依赖。请执行 `pip install -e .[llm]`，"
+            raise ProviderError(
+                "未安装 openai 依赖。请执行 `uv sync --extra llm`，"
                 "或使用 `--provider mock` 离线运行。"
             ) from exc
 
         import os
 
         self.model = model or os.getenv("LAWAGENT_MODEL", "gpt-4.1-mini")
-        self.client = OpenAI(
-            api_key=api_key or os.getenv("OPENAI_API_KEY"),
-            base_url=base_url or os.getenv("OPENAI_BASE_URL"),
-        )
+        resolved_key = api_key or os.getenv("OPENAI_API_KEY")
+        if not resolved_key:
+            raise ProviderError(
+                "未设置 OPENAI_API_KEY。请先配置 API Key，或使用 `--provider mock` 离线运行。"
+            )
+        try:
+            self.client = OpenAI(
+                api_key=resolved_key,
+                base_url=base_url or os.getenv("OPENAI_BASE_URL"),
+                timeout=30.0,
+                max_retries=1,
+            )
+        except Exception as exc:
+            raise ProviderError(f"模型 provider 初始化失败：{exc}") from exc
 
     def next_action(
         self,
@@ -196,32 +218,40 @@ class OpenAICompatibleProvider:
             ensure_ascii=False,
         )
 
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
+                messages=messages,
                 temperature=0,
                 max_tokens=1200,
                 response_format={"type": "json_object"},
             )
-        except Exception:
+        except Exception as exc:
+            if not _response_format_unsupported(exc):
+                raise ProviderError(f"模型调用失败：{exc}") from exc
             # Some compatible servers do not implement response_format.
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                temperature=0,
-                max_tokens=1200,
-            )
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    temperature=0,
+                    max_tokens=1200,
+                )
+            except Exception as retry_exc:
+                raise ProviderError(f"模型调用失败：{retry_exc}") from retry_exc
 
         content = response.choices[0].message.content or "{}"
         payload = _load_json_object(content)
         return _parse_decision(payload)
+
+
+def _response_format_unsupported(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return "response_format" in message or "json_object" in message
 
 
 def _rewrite_query(question: str) -> str:
@@ -315,13 +345,28 @@ def _article_from_result(value: Any) -> Article | None:
         return None
 
 
-def _no_evidence(reason: str) -> AgentDecision:
+def _is_mock_unanswerable(question: str) -> bool:
+    """Route the documented offline no-answer demo scenarios.
+
+    This is a deterministic demo fixture, not a general answerability model.
+    """
+
+    if "免费午餐" in question:
+        return True
+    if "办公室" in question and "吵" in question:
+        return True
+    if "团建" in question:
+        return True
+    return "旅游福利" in question
+
+
+def _no_evidence(reason: str, *, missing_facts: list[str] | None = None) -> AgentDecision:
     return AgentDecision(
         decision_summary=reason,
         is_final=True,
         answer_summary="",
         citations=[],
-        missing_facts=[],
+        missing_facts=missing_facts or [],
     )
 
 

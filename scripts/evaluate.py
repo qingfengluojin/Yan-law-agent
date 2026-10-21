@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +10,8 @@ from lawagent.agent import AgentRunner, run_baseline
 from lawagent.llm import MockProvider, OpenAICompatibleProvider
 from lawagent.retriever import Retriever, load_articles
 from lawagent.schema import RunResult
-from lawagent.verify import CitationVerifier
+from lawagent.trace import build_run_meta
+from lawagent.verify import CitationVerifier, canonical_text
 
 
 def parse_args() -> argparse.Namespace:
@@ -33,7 +34,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def load_cases(path: str | Path) -> list[dict[str, Any]]:
-    with Path(path).open("r", encoding="utf-8") as handle:
+    with Path(path).open("r", encoding="utf-8-sig") as handle:
         return [json.loads(line) for line in handle if line.strip()]
 
 
@@ -54,32 +55,58 @@ def failure_then_success(result: RunResult) -> bool:
     return False
 
 
-def citation_metrics(
-    result: RunResult,
+def _citation_metrics(
+    citations,
     verifier: CitationVerifier,
     seen_ids: set[str],
-) -> tuple[int, int, int, int]:
-    total = len(result.answer.citations)
+) -> dict[str, int]:
+    total = len(citations)
     existence = 0
     verbatim = 0
     unsupported = 0
+    unique_keys: set[tuple[str, str, str]] = set()
 
-    for citation in result.answer.citations:
+    for citation in citations:
         article = verifier.retriever.get_article(
             citation.law,
             citation.article_no,
         )
+        unique_key = (
+            article.article_id if article is not None else citation.law,
+            citation.article_no,
+            canonical_text(citation.quote),
+        )
+        unique_keys.add(unique_key)
         if article is None:
             continue
 
         existence += 1
-        if article.article_id not in seen_ids:
+        if not verifier.verify(citation, allowed_article_ids=seen_ids).ok:
             unsupported += 1
 
         if verifier.verify(citation).ok:
             verbatim += 1
 
-    return total, existence, verbatim, unsupported
+    return {
+        "count": total,
+        "unique": len(unique_keys),
+        "existence": existence,
+        "verbatim": verbatim,
+        "unsupported": unsupported,
+        "duplicates": total - len(unique_keys),
+    }
+
+
+def citation_metrics(
+    result: RunResult,
+    verifier: CitationVerifier,
+    seen_ids: set[str],
+) -> dict[str, dict[str, int]]:
+    raw_citations = result.raw_citations or result.answer.citations
+    return {
+        "raw": _citation_metrics(raw_citations, verifier, seen_ids),
+        "post_guard": _citation_metrics(result.answer.citations, verifier, seen_ids),
+    }
 
 
 def no_answer_is_safe(result: RunResult) -> bool:
@@ -128,11 +155,7 @@ def evaluate_mode(
         no_answer_safe = no_answer_is_safe(result) if case["type"] == "no_answer" else None
         recovery_case_hit = expected <= seen_ids if case["type"] == "recovery" else None
 
-        total, existence, verbatim, unsupported = citation_metrics(
-            result,
-            verifier,
-            seen_ids,
-        )
+        metrics = citation_metrics(result, verifier, seen_ids)
 
         citation_ids: list[str] = []
         for citation in result.answer.citations:
@@ -158,11 +181,18 @@ def evaluate_mode(
                 "gold_matched": matched,
                 "gold_total": len(expected),
                 "gold_case_hit": gold_case_hit,
-                "citation_count": total,
+                "raw_citation_count": metrics["raw"]["count"],
+                "raw_citation_unique": metrics["raw"]["unique"],
+                "raw_citation_existence": metrics["raw"]["existence"],
+                "raw_citation_verbatim": metrics["raw"]["verbatim"],
+                "raw_unsupported_citations": metrics["raw"]["unsupported"],
+                "post_guard_citation_count": metrics["post_guard"]["count"],
+                "post_guard_citation_unique": metrics["post_guard"]["unique"],
+                "post_guard_citation_existence": metrics["post_guard"]["existence"],
+                "post_guard_citation_verbatim": metrics["post_guard"]["verbatim"],
+                "post_guard_unsupported_citations": metrics["post_guard"]["unsupported"],
+                "duplicate_final_citations": metrics["post_guard"]["duplicates"],
                 "citation_ids": citation_ids,
-                "citation_existence": existence,
-                "citation_verbatim": verbatim,
-                "unsupported_citations": unsupported,
                 "no_answer_safe": no_answer_safe,
                 "recovery_case_hit": recovery_case_hit,
                 "failure_then_success": failure_then_success(result),
@@ -183,10 +213,16 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, int]:
         "gold_case_hit": sum(bool(row["gold_case_hit"]) for row in gold_rows),
         "gold_matched": sum(row["gold_matched"] for row in gold_rows),
         "gold_total": sum(row["gold_total"] for row in gold_rows),
-        "citation_count": sum(row["citation_count"] for row in rows),
-        "citation_existence": sum(row["citation_existence"] for row in rows),
-        "citation_verbatim": sum(row["citation_verbatim"] for row in rows),
-        "unsupported": sum(row["unsupported_citations"] for row in rows),
+        "raw_citation_count": sum(row["raw_citation_count"] for row in rows),
+        "raw_citation_existence": sum(row["raw_citation_existence"] for row in rows),
+        "raw_citation_verbatim": sum(row["raw_citation_verbatim"] for row in rows),
+        "raw_unsupported": sum(row["raw_unsupported_citations"] for row in rows),
+        "post_guard_citation_count": sum(row["post_guard_citation_count"] for row in rows),
+        "post_guard_citation_unique": sum(row["post_guard_citation_unique"] for row in rows),
+        "post_guard_citation_existence": sum(row["post_guard_citation_existence"] for row in rows),
+        "post_guard_citation_verbatim": sum(row["post_guard_citation_verbatim"] for row in rows),
+        "post_guard_unsupported": sum(row["post_guard_unsupported_citations"] for row in rows),
+        "duplicate_final_citations": sum(row["duplicate_final_citations"] for row in rows),
         "no_answer_total": len(no_answer_rows),
         "no_answer_safe": sum(bool(row["no_answer_safe"]) for row in no_answer_rows),
         "recovery_total": len(recovery_rows),
@@ -216,14 +252,37 @@ def render_report(
     gold_recall_agent = ratio(agent["gold_matched"], agent["gold_total"])
     gold_recall_baseline = baseline_ratio("gold_matched", "gold_total")
 
-    citation_existence_agent = ratio(agent["citation_existence"], agent["citation_count"])
-    citation_existence_baseline = baseline_ratio("citation_existence", "citation_count")
+    raw_existence_agent = ratio(agent["raw_citation_existence"], agent["raw_citation_count"])
+    raw_existence_baseline = baseline_ratio("raw_citation_existence", "raw_citation_count")
 
-    citation_verbatim_agent = ratio(agent["citation_verbatim"], agent["citation_count"])
-    citation_verbatim_baseline = baseline_ratio("citation_verbatim", "citation_count")
+    raw_verbatim_agent = ratio(agent["raw_citation_verbatim"], agent["raw_citation_count"])
+    raw_verbatim_baseline = baseline_ratio("raw_citation_verbatim", "raw_citation_count")
 
-    unsupported_agent = str(agent["unsupported"])
-    unsupported_baseline = str(baseline["unsupported"]) if baseline else "N/A"
+    raw_unsupported_agent = str(agent["raw_unsupported"])
+    raw_unsupported_baseline = str(baseline["raw_unsupported"]) if baseline else "N/A"
+
+    post_existence_agent = ratio(
+        agent["post_guard_citation_existence"], agent["post_guard_citation_count"]
+    )
+    post_existence_baseline = baseline_ratio(
+        "post_guard_citation_existence", "post_guard_citation_count"
+    )
+
+    post_verbatim_agent = ratio(
+        agent["post_guard_citation_verbatim"], agent["post_guard_citation_count"]
+    )
+    post_verbatim_baseline = baseline_ratio(
+        "post_guard_citation_verbatim", "post_guard_citation_count"
+    )
+
+    post_unsupported_agent = str(agent["post_guard_unsupported"])
+    post_unsupported_baseline = str(baseline["post_guard_unsupported"]) if baseline else "N/A"
+
+    unique_agent = str(agent["post_guard_citation_unique"])
+    unique_baseline = str(baseline["post_guard_citation_unique"]) if baseline else "N/A"
+
+    duplicates_agent = str(agent["duplicate_final_citations"])
+    duplicates_baseline = str(baseline["duplicate_final_citations"]) if baseline else "N/A"
 
     no_answer_agent = ratio(agent["no_answer_safe"], agent["no_answer_total"])
     no_answer_baseline = baseline_ratio("no_answer_safe", "no_answer_total")
@@ -241,8 +300,13 @@ def render_report(
         f"- 数据文件：`{meta['data']}`",
         f"- 案例文件：`{meta['cases']}`",
         f"- 数据快照：{meta['snapshot']}",
+        f"- 数据 SHA256：`{meta['data_sha256']}`",
+        f"- Git commit：`{meta['git_commit']}`",
+        f"- Git dirty：{meta['git_dirty']}",
         f"- provider：`{meta['provider']}`",
         f"- 模型：`{meta['model']}`",
+        f"- Prompt version：`{meta['prompt_version']}`",
+        f"- 输出模式：{meta.get('answer_mode', 'extractive')}",
         f"- baseline top_k：{meta['top_k']}",
         "",
         "> Gold hit 以工具 observations 的 `top_ids` 为准，衡量检索覆盖，不等同于最终答案完整性。",
@@ -253,9 +317,15 @@ def render_report(
         "|---|---:|---:|",
         f"| Gold case hit | {gold_case_hit_agent} | {gold_case_hit_baseline} |",
         f"| Gold article recall | {gold_recall_agent} | {gold_recall_baseline} |",
-        f"| Citation existence | {citation_existence_agent} | {citation_existence_baseline} |",
-        f"| Verbatim match | {citation_verbatim_agent} | {citation_verbatim_baseline} |",
-        f"| Unsupported citations | {unsupported_agent} | {unsupported_baseline} |",
+        f"| Raw citation existence | {raw_existence_agent} | {raw_existence_baseline} |",
+        f"| Raw verbatim match | {raw_verbatim_agent} | {raw_verbatim_baseline} |",
+        f"| Raw unsupported citations | {raw_unsupported_agent} | {raw_unsupported_baseline} |",
+        f"| Post-guard citation existence | {post_existence_agent} | {post_existence_baseline} |",
+        f"| Post-guard verbatim match | {post_verbatim_agent} | {post_verbatim_baseline} |",
+        "| Post-guard unsupported citations | "
+        f"{post_unsupported_agent} | {post_unsupported_baseline} |",
+        f"| Unique final citations | {unique_agent} | {unique_baseline} |",
+        f"| Duplicate final citations | {duplicates_agent} | {duplicates_baseline} |",
         f"| No-answer safe | {no_answer_agent} | {no_answer_baseline} |",
         f"| Recovery case hit | {recovery_agent} | {recovery_baseline} |",
         f"| Failure then success | {failure_agent} | {failure_baseline} |",
@@ -281,8 +351,9 @@ def render_report(
             "",
             "## Agent 逐案结果",
             "",
-            "| ID | 类型 | 状态 | 工具调用 | Gold | 最终引用 | 无效引用 | 备注 |",
-            "|---|---|---|---:|---:|---|---:|---|",
+            "| ID | 类型 | 状态 | 工具调用 | Gold | 原始无效 | 最终引用 | "
+            "最终唯一数 | 最终无效 | 备注 |",
+            "|---|---|---|---:|---:|---:|---|---:|---:|---|",
         ]
     )
 
@@ -300,8 +371,9 @@ def render_report(
             note = row["notes"]
         lines.append(
             f"| {row['id']} | {row['type']} | {row['status']} | "
-            f"{row['tool_calls']} | {gold} | {citations} | "
-            f"{row['unsupported_citations']} | {note} |"
+            f"{row['tool_calls']} | {gold} | {row['raw_unsupported_citations']} | "
+            f"{citations} | {row['post_guard_citation_unique']} | "
+            f"{row['post_guard_unsupported_citations']} | {note} |"
         )
 
     if baseline_rows:
@@ -310,8 +382,8 @@ def render_report(
                 "",
                 "## Baseline 逐案结果",
                 "",
-                "| ID | 状态 | Gold | 最终引用 | 无效引用 |",
-                "|---|---|---:|---|---:|",
+                "| ID | 状态 | Gold | 最终引用 | 最终唯一数 | 最终无效 |",
+                "|---|---|---:|---|---:|---:|",
             ]
         )
         for row in baseline_rows:
@@ -319,7 +391,8 @@ def render_report(
             citations = ", ".join(row["citation_ids"]) or "-"
             lines.append(
                 f"| {row['id']} | {row['status']} | {gold} | "
-                f"{citations} | {row['unsupported_citations']} |"
+                f"{citations} | {row['post_guard_citation_unique']} | "
+                f"{row['post_guard_unsupported_citations']} |"
             )
 
     lines.extend(
@@ -327,11 +400,11 @@ def render_report(
             "",
             "## 评测局限",
             "",
-            "- 本报告仅覆盖 20 条人工案例，不能外推总体准确率。",
+            f"- 本报告仅覆盖 {agent['cases']} 条人工案例，不能外推总体准确率。",
             "- Gold hit 是工具检索覆盖指标，不是最终答案完整性指标。",
-            "- MockProvider 是确定性流程测试，不代表真实模型能力。",
+            "- MockProvider 是确定性流程测试，其无答案路由是固定演示规则，不代表真实模型能力。",
             "- baseline 是 retrieval-only，不是端到端 LLM baseline。",
-            "- 引用指标是 Output Guard 之后的结果，不能单独证明模型没有生成过错误引用。",
+            "- Raw 指标仍不覆盖在 JSON 解析阶段就被丢弃的非法 citation 结构。",
             "- 无答案安全率和失败恢复率必须结合真实 LLM 轨迹解释。",
             "",
         ]
@@ -342,6 +415,7 @@ def render_report(
 
 def main() -> None:
     args = parse_args()
+    started_at = datetime.now(UTC)
     articles = load_articles(args.data)
     retriever = Retriever(articles)
     cases = load_cases(args.cases)
@@ -351,6 +425,13 @@ def main() -> None:
         provider = MockProvider() if args.provider == "mock" else OpenAICompatibleProvider()
 
     model_name = getattr(provider, "model", "mock") if provider else "N/A"
+    run_meta = build_run_meta(
+        provider=args.provider,
+        model=model_name,
+        prompt_version="evaluation-v1",
+        data_path=args.data,
+        started_at=started_at,
+    )
 
     agent_rows = (
         evaluate_mode("agent", cases, retriever, provider, args.top_k)
@@ -367,9 +448,14 @@ def main() -> None:
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "data": args.data,
         "model": model_name,
+        "prompt_version": run_meta.prompt_version,
         "cases": args.cases,
         "snapshot": ", ".join(sorted({article.verified_at.isoformat() for article in articles})),
         "provider": args.provider,
+        "data_sha256": run_meta.data_sha256,
+        "git_commit": run_meta.git_commit,
+        "git_dirty": str(run_meta.git_dirty).lower(),
+        "answer_mode": "extractive",
         "top_k": str(args.top_k),
     }
 
@@ -383,7 +469,8 @@ def main() -> None:
         summary = summarize(agent_rows)
         print(f"agent gold_case_hit: {summary['gold_case_hit']}/{summary['gold_cases']}")
         print(f"agent gold_article_recall: {summary['gold_matched']}/{summary['gold_total']}")
-        print(f"agent unsupported_citations: {summary['unsupported']}")
+        print(f"agent raw_unsupported_citations: {summary['raw_unsupported']}")
+        print(f"agent post_guard_unsupported_citations: {summary['post_guard_unsupported']}")
 
 
 if __name__ == "__main__":

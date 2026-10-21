@@ -6,6 +6,7 @@ import json
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Literal
 
 from .llm import LLMProvider
 from .retriever import Retriever
@@ -29,6 +30,7 @@ class AgentConfig:
     # failed search -> rewritten search -> get_article -> verify_citation.
     max_tool_calls: int = 4
     no_progress_window: int = 2
+    answer_mode: Literal["extractive", "advisory"] = "extractive"
 
 
 class AgentRunner:
@@ -57,15 +59,35 @@ class AgentRunner:
 
         for step in range(1, self.config.max_steps + 1):
             started = time.perf_counter()
-            decision = self.provider.next_action(
-                question,
-                trace,
-                observations,
-                self.tools.schemas(),
-            )
+            try:
+                decision = self.provider.next_action(
+                    question,
+                    trace,
+                    observations,
+                    self.tools.schemas(),
+                )
+            except Exception as exc:
+                trace.append(
+                    TraceEvent(
+                        step=step,
+                        decision_summary="模型 provider 调用失败。",
+                        ok=False,
+                        reason="provider_error",
+                        hint=f"{type(exc).__name__}: {exc}",
+                    )
+                )
+                return self._terminate(
+                    question,
+                    trace,
+                    observations,
+                    step,
+                    tool_calls,
+                    reason="provider_error",
+                )
             decision_latency_ms = (time.perf_counter() - started) * 1000
 
             if decision.is_final:
+                raw_citations = list(decision.citations)
                 answer = self._finalize(
                     decision,
                     seen_article_ids=seen_article_ids,
@@ -78,6 +100,7 @@ class AgentRunner:
                     mode="agent",
                     answer=answer,
                     trace=trace,
+                    raw_citations=raw_citations,
                     steps=step,
                     tool_calls=tool_calls,
                 )
@@ -232,15 +255,29 @@ class AgentRunner:
             )
             return FinalAnswer(
                 status="no_evidence",
+                answer_mode=self.config.answer_mode,
                 summary="无法给出可核验结论：本轮没有通过存在性与逐字核验的引用。",
                 citations=[],
                 missing_facts=decision.missing_facts,
             )
 
         status = "ok" if not failures else "degraded"
-        summary = decision.answer_summary.strip() or "根据本轮已核验条文，结果如下。"
+        if self.config.answer_mode == "extractive":
+            summary = (
+                f"已核验 {len(verified)} 条法条原文。本工具默认只展示原文，不输出法律适用结论。"
+            )
+            review_required = False
+        else:
+            model_summary = decision.answer_summary.strip()
+            summary = (
+                "以下为模型生成的辅助性说明，未经法律适用性核验；"
+                "所附引用原文已通过存在性与逐字核验。"
+            )
+            if model_summary:
+                summary += f"\n\n{model_summary}"
+            review_required = True
         if failures:
-            summary = "检索未完全收敛，仅返回已核验部分。" + summary
+            summary = "部分引用未通过核验，仅保留已核验部分。\n\n" + summary
 
         trace.append(
             TraceEvent(
@@ -256,9 +293,11 @@ class AgentRunner:
         )
         return FinalAnswer(
             status=status,
+            answer_mode=self.config.answer_mode,
             summary=summary,
             citations=verified,
             missing_facts=decision.missing_facts,
+            review_required=review_required,
         )
 
     def _terminate(
@@ -296,6 +335,7 @@ class AgentRunner:
         if citations:
             answer = FinalAnswer(
                 status="degraded",
+                answer_mode="extractive",
                 summary=(
                     f"检索未收敛（{reason}）。以下仅列出本轮已获取的条文原文，不构成法律结论。"
                 ),
@@ -304,6 +344,7 @@ class AgentRunner:
         else:
             answer = FinalAnswer(
                 status="no_evidence",
+                answer_mode="extractive",
                 summary=f"检索未收敛（{reason}），且没有取得可核验的条文原文。",
                 citations=[],
             )
@@ -350,12 +391,14 @@ def run_baseline(question: str, retriever: Retriever, *, top_k: int = 5) -> RunR
     if not articles:
         answer = FinalAnswer(
             status="no_evidence",
+            answer_mode="extractive",
             summary="baseline 单次检索没有命中条文。",
             citations=[],
         )
     else:
         answer = FinalAnswer(
             status="ok",
+            answer_mode="extractive",
             summary=(
                 f"baseline 单次检索返回 {len(articles)} 条候选条文。"
                 "以下仅列出原文，未进行多步补检索。"
@@ -367,6 +410,7 @@ def run_baseline(question: str, retriever: Retriever, *, top_k: int = 5) -> RunR
         mode="baseline",
         answer=answer,
         trace=trace,
+        raw_citations=citations,
         steps=1,
         tool_calls=1,
     )

@@ -20,6 +20,7 @@ class SchemaTests(unittest.TestCase):
         )
         self.assertEqual(article.article_no, "3")
         self.assertEqual(article.article_id, "测试劳动法#3")
+        self.assertEqual(article.review_status, "self_checked")
 
     def test_article_rejects_unknown_status(self) -> None:
         with self.assertRaises(ValidationError):

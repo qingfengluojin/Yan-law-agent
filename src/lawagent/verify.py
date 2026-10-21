@@ -108,9 +108,14 @@ class CitationVerifier:
     ) -> tuple[list[Citation], list[VerificationResult]]:
         verified: list[Citation] = []
         failures: list[VerificationResult] = []
+        seen: set[tuple[str, str]] = set()
         for citation in citations:
             result = self.verify(citation, allowed_article_ids=allowed_article_ids)
             if result.ok and result.citation is not None:
+                key = (result.citation.article_id, canonical_text(result.citation.quote))
+                if key in seen:
+                    continue
+                seen.add(key)
                 verified.append(result.citation)
             else:
                 failures.append(result)

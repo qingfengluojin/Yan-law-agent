@@ -65,6 +65,12 @@ class MockProviderSelectionTests(unittest.TestCase):
         self.assertTrue(result.answer.citations)
         self.assertEqual(result.answer.citations[0].article_no, "62")
 
+    def test_documented_out_of_scope_question_abstains(self) -> None:
+        result = self._run("公司未提供免费午餐，能否解除劳动合同？")
+        self.assertEqual(result.answer.status, "no_evidence")
+        self.assertEqual(result.answer.citations, [])
+        self.assertTrue(result.answer.missing_facts)
+
 
 if __name__ == "__main__":
     unittest.main()

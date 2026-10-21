@@ -1,3 +1,4 @@
+import json
 import unittest
 from collections import Counter
 from pathlib import Path
@@ -33,6 +34,15 @@ class DataTests(unittest.TestCase):
 
         law_types = Counter(article.law_type for article in self.articles)
         self.assertEqual(law_types, Counter({"法律": 34, "行政法规": 6}))
+
+    def test_review_status_is_explicitly_self_checked(self) -> None:
+        self.assertTrue(all(article.review_status == "self_checked" for article in self.articles))
+        rows = [
+            json.loads(line)
+            for line in DATA.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertTrue(all(row.get("review_status") == "self_checked" for row in rows))
 
     def test_provenance_fields(self) -> None:
         self.assertTrue(all(article.source_url.startswith("http") for article in self.articles))
