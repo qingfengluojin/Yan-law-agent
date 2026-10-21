@@ -167,6 +167,8 @@ class RunResult(BaseModel):
     answer: FinalAnswer
     trace: list[TraceEvent] = Field(default_factory=list)
     raw_citations: list[Citation] = Field(default_factory=list)
+    model_summary: str = ""
+    model_missing_facts: list[str] = Field(default_factory=list)
     run_meta: RunMeta = Field(default_factory=RunMeta)
     steps: int = 0
     tool_calls: int = 0

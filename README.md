@@ -89,7 +89,7 @@ uv run lawagent --baseline --data data/articles.jsonl "经济补偿按什么标�
 uv run lawagent --agent --provider mock --data data/articles.jsonl --json --trace-out traces/demo.jsonl --run-out traces/demo-run.json "公司不交社保，解除劳动合同能要补偿吗？"
 ```
 
-`--trace-out` 保存工具事件；`--run-out` 额外保存最终答案、原始引用、通过守卫的引用、数据哈希、Git commit、Git dirty 状态、provider、model 和 prompt version。
+`--trace-out` 保存工具事件；`--run-out` 额外保存最终答案、模型原始摘要与缺失事实、原始引用、通过守卫的引用、数据哈希、Git commit、Git dirty 状态、provider、model 和 prompt version。
 
 ## 使用 DeepSeek
 

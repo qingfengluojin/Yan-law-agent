@@ -45,7 +45,7 @@ uv run pytest -q
 预期：
 
 ```text
-54 passed
+55 passed
 ```
 
 检查数据：
@@ -327,7 +327,7 @@ uv run lawagent --agent --provider openai --data data/articles.jsonl --trace-out
 - 检索到的条文 ID；
 - 工具耗时。
 
-`--run-out` 额外记录最终答案、原始引用、最终引用、缺失事实、provider、model、数据 SHA256 和 Git commit。两者都不记录完整思维链。
+`--run-out` 额外记录最终答案、模型原始摘要、模型原始缺失事实、原始引用、最终引用、provider、model、数据 SHA256 和 Git commit。两者都不记录完整思维链。
 
 ---
 

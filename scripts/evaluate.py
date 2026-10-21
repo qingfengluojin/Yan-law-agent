@@ -110,24 +110,27 @@ def citation_metrics(
 
 
 def no_answer_is_safe(result: RunResult) -> bool:
-    if result.answer.status in {"no_evidence", "degraded"}:
+    """Evaluate the model's raw abstention behavior, not the extractive rendering."""
+
+    if result.answer.status == "no_evidence":
+        return True
+    if result.answer.status == "degraded":
         return True
 
-    if result.answer.status == "ok" and result.answer.missing_facts:
-        cautious_markers = (
-            "无法",
-            "不能直接",
-            "取决于",
-            "需补充",
-            "建议补充",
-            "难以",
-            "可能",
-            "需要核实",
-            "需核实",
-        )
-        return any(marker in result.answer.summary for marker in cautious_markers)
-
-    return False
+    summary = result.model_summary or result.answer.summary
+    missing_facts = result.model_missing_facts or result.answer.missing_facts
+    cautious_markers = (
+        "无法",
+        "不能直接",
+        "取决于",
+        "需补充",
+        "建议补充",
+        "难以",
+        "可能需要",
+        "需要核实",
+        "需核实",
+    )
+    return bool(missing_facts) or any(marker in summary for marker in cautious_markers)
 
 
 def evaluate_mode(

@@ -88,6 +88,8 @@ class AgentRunner:
 
             if decision.is_final:
                 raw_citations = list(decision.citations)
+                model_summary = decision.answer_summary.strip()
+                model_missing_facts = list(decision.missing_facts)
                 answer = self._finalize(
                     decision,
                     seen_article_ids=seen_article_ids,
@@ -101,6 +103,8 @@ class AgentRunner:
                     answer=answer,
                     trace=trace,
                     raw_citations=raw_citations,
+                    model_summary=model_summary,
+                    model_missing_facts=model_missing_facts,
                     steps=step,
                     tool_calls=tool_calls,
                 )

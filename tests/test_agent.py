@@ -158,6 +158,7 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(result.answer.status, "ok")
         self.assertEqual(result.answer.answer_mode, "extractive")
         self.assertNotIn("UNSUPPORTED CONCLUSION", result.answer.summary)
+        self.assertIn("UNSUPPORTED CONCLUSION", result.model_summary)
         self.assertFalse(result.answer.review_required)
 
     def test_advisory_mode_marks_model_summary_for_review(self) -> None:
