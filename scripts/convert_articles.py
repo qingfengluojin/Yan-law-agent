@@ -16,6 +16,8 @@ FIELDS = [
     "text",
     "source_url",
     "verified_at",
+    "review_status",
+    "reviewer",
     "status",
 ]
 
@@ -42,11 +44,16 @@ def main() -> None:
     article_ids = []
 
     for line_number, row in enumerate(rows, start=2):
-        missing = [field for field in FIELDS if not (row.get(field) or "").strip()]
+        required_fields = [field for field in FIELDS if field != "reviewer"]
+        missing = [field for field in required_fields if not (row.get(field) or "").strip()]
         if missing:
             raise SystemExit(f"line {line_number}: missing fields: {', '.join(missing)}")
 
-        record = {field: row[field].strip() for field in FIELDS}
+        record = {field: (row.get(field) or "").strip() for field in FIELDS}
+        if record["review_status"] not in {"self_checked", "independently_verified"}:
+            raise SystemExit(f"line {line_number}: invalid review_status")
+        if record["review_status"] == "independently_verified" and not record["reviewer"]:
+            raise SystemExit(f"line {line_number}: reviewer is required after independent review")
 
         if record["topic"] not in TOPICS:
             raise SystemExit(f"line {line_number}: invalid topic: {record['topic']}")

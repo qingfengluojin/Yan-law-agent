@@ -57,6 +57,8 @@ fields = [
     "text",
     "source_url",
     "verified_at",
+    "review_status",
+    "reviewer",
     "status",
     "notes",
 ]
@@ -77,6 +79,8 @@ with path.open("w", encoding="utf-8-sig", newline="") as handle:
                 "text": "",
                 "source_url": "",
                 "verified_at": "",
+                "review_status": "",
+                "reviewer": "",
                 "status": "current",
                 "notes": "候选，待核验",
             }
